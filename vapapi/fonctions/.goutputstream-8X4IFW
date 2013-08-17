@@ -1,0 +1,51 @@
+<?php
+class MailLang
+{ 
+  static function frHelpCtrl($prenom,$nom,$newPasse,$mailvap)
+  {
+    $text = "Bonjour ".$prenom." ".$nom.", \n"
+          ." Voici un nouveau mot de passe : ". $newPasse." \n"			    
+          ." qui, associé à votre courriel  ".$mailvap." \n"
+			    ." vous identifiera sur notre espace membre: ".BASEURL."index.php"."\n"
+          ." \n"
+          ." Vous pouvez ensuite changer ce mot de passe:\n" 
+          ." - en allant dans votre profil VAP,\n"  
+          ." - en encodant un mot de passe choisi par vous  (avec confirmation)\n" 
+          ." - et en validant la mise à jour.\n"
+          ." \n"   
+			    ." Merci, l'équipe des VAP \n";
+    return $text;
+  }
+  
+  static function nlHelpCtrl($prenom,$nom,$newPasse,$mailvap)
+  {
+    $text = "Dag ".$prenom." ".$nom.", \n"
+            ." Hier komt uw nieuw passwoord :". $newPasse." \n"	
+            ." die, met uw e-emailadres :".$mailvap." \n"
+            ." op vapSpace: ".BASEURL."index.php"."\n"
+            ." met succes zal u identificeren.\n\n"
+            ." Op het vapSpace, met een verandering in uw Vap profiel\n"
+            ." kan uw dit passwoord wijzingen.\n\n"
+            ." Bedankt, de Vap team";
+    return $text;    
+  }
+
+  static frIterContact($iterNom,$iterMbr,$iterMail,$clickNom,$clickPre)
+  {
+    $text = 'Bonjour '.$clickPre.' '.$clickNom.", \n"
+          ."Suite à votre intérêt pour le trajet proposé par Mme/M: ".$iterNom.", membre du réseau VAP n°: ".$iterMbr." \n"
+          ."et, en accord avec M/Mme".$iterNom.", nous vous communiquons son adresse mail pour partager certains trajets. \n"
+          ."  \n"          
+          .$iterMail. " \n"
+          ."  \n"
+          ."Merci de votre intérêt pour le réseau VAP.\n"
+          ."Bien à vous. \n"          
+          ."<a href=\"http://www.vap-vap.be\">L'équipe des VAP, pour une mobilité partagée.</a> \n"
+          ."  \n";
+    return $text; 
+  }
+
+  static nlIterContact($iterNom,$iterMbr,$iterMail,$clickNom,$clickPre)
+   $text = 'Dag '.$clickPre.' '.$clickNom.", \n"
+          ."Naar aanleiding van uw interesse in de voorgestelde wijze door mevrouw / M: ".$iterNom.", lid van de VAP n°: ".$iterMbr." \n"
+          ."en in overleg met dhr/mvr: ".$iterNom.", geven wij u zijn e-mailadres om een 

@@ -58,7 +58,7 @@ class Frontal
     else { throw new MyPhpException ("Le contrôleur: $controleur n'existe pas"); }
       
     // On instancie la classe du controleur
-    eval ("\$ctrl = new $controleur();");
+    if (! $ctrl = new $controleur()) { throw new PyPhpException("Impossible d'instancier $controleur"); }
 
     // Il faut vérifier que l'action existe
     if ( ! method_exists($ctrl, $action)) { throw new MyPhpException ("L'action <b>$action</b> n'existe pas"); }

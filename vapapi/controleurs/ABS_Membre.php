@@ -62,6 +62,7 @@ abstract class ABS_Membre extends Controleur
   protected $valppk;
   protected $ppk;
   protected $chat;
+  protected $civilite = array();
 /**
 * methode fille __construct()  
 * necessaire pour initier en premier lieu le nom du contexte = nom du controleur
@@ -87,6 +88,7 @@ abstract class ABS_Membre extends Controleur
     $this->tableDeux = $this->tabTables[1];
     $this->champPassif = 'lienant';         
     $this->phase = '';
+    $this->civilite = array("F"=>MBR_FEMI,"M"=>MBR_MASC);
     // les formulaires de 'multi_Membre_recom.tpl' 
     $this->promoMail = array('promoUn','promoDeux','promoTrois');
     $this->promoText = array('promoMsg');         

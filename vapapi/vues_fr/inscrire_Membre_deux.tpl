@@ -26,7 +26,8 @@
 </fieldset>
 {multiChoice}
 <p class="pagi">
-  <input type="submit" value="Valider {type}" /> <br />     
+  <input type="submit" value="Valider {type}" /> <br />  
+  <input type="hidden" name="genre"  value="{genre}" /><br />    
   <input type="hidden" name="nom"  value="{nom}" /><br /> 
   <input type="hidden" name="prenom"  value="{prenom}" /><br />
   <input type="hidden" name="mail"  value="{mail}" /><br />

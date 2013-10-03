@@ -3,6 +3,7 @@
   <p>De vakken voorafgegaan door een * moeten verplicht ingevuld worden.</p>
   <fieldset><legend>persoonsgegevens : </legend>
     <p class="perso">Opgelet: slechts één inschrijving is mogelijk per e-mailadres. </p>
+    <p class="perso"><label for="genre"><strong>{genre_o} Geslacht : </strong></label> {civil} </p>
     <p class="perso"><label for="nom"><strong>{nom_o} Naam :</strong></label><input type="text" name="nom" id="nom" size="{nom_s}" maxlength="{nom_s}" value="{nom}" /></p> 
     <p class="perso"><label for="prenom"><strong>{prenom_o} Voornaam :</strong></label><input type="text" name="prenom" id="prenom" size="{prenom_s}" maxlength="{prenom_s}" value="{prenom}" /></p>
     <p class="perso"><label for="mail"><strong>{mail_o} E-mailadres: </strong></label><input type="text" name="mail" id="mail" size="{mail_s}" maxlength="{mail_s}" value="{mail}" /></p>

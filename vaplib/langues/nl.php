@@ -117,6 +117,8 @@ define("INTRO_UP_REG","Van provincie veranderen? ");
 define("INTRO_REG","Selecteer uw provincie.<br />Uw provincie wordt niet vermeld ? Selecteer:'Andere'");
 define("SANSMAILS_ALERT",' Let op : wanneer men inschrijft zonder een e-mailadres op te geven, zal alle online interactie langs VAP-space onmogelijk zijn. ');
 define("NIHIL",'nul');
+define("MBR_FEMI","Mevrouw");
+define("MBR_MASC","Mijnheer");
 /**
 * Controleur AntenneCtrl.php
 */

@@ -121,6 +121,8 @@ define("INTRO_UP_REG","Changer votre région actuelle ?");
 define("INTRO_REG"," Votre province est dans la liste? Cochez-là.<br /> Votre province est absente de cette liste?  Cochez: 'Autre'");
 define("SANSMAILS_ALERT",'Inscrire un membres sans mail empechera toute interaction en ligne de ce membre dans le Vapspace');
 define("NIHIL",'néant');
+define("MBR_FEMI","Madame");
+define("MBR_MASC","Monsieur");
 /**
 * Controleur AntenneCtrl.php et RegionCtrl.php
 */

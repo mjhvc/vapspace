@@ -776,18 +776,21 @@ class Controleur
   public function statutConnect($token=NULL)
   {
     if ($this->validSess($token)) { 
+      if ($this->droits & RESPONSABLE) { $ch_resp = '<li class="menuPerso"><a href="'.BASEURL.'index.php?token='.$token.'">'.MBR_ADMIN.'</a></li>'; }
+      else { $ch_resp = ''; }
       $urlOut = BASEURL."index.php?ctrl=auth&amp;action=logout";
       $urlProfil = BASEURL."index.php?ctrl=membre&amp;action=editer&amp;line=".$_SESSION['idhum']."&amp;token=".$token ;
       $chaine = '<ul class="connect"><li><a href="#" id="Perso">'.$_SESSION['prenom']." ".$_SESSION['nom'].' <img src="photos/down2.gif" alt="down" /></a></li>'
                 .'<li class="menuPerso"><a href="'.$urlProfil.'">'.CONNECT_PROFIL.'</a></li>'
-                .'<li class="menuPerso">'.CONNECT_NUMBER.$_SESSION['membre']. '</li>'       
-                .'<li class="menuPerso"><a href="'.$urlOut.'">'.CONNECT_LOGOUT.'</a></li></ul>';
+                .'<li class="menuPerso">'.CONNECT_NUMBER.$_SESSION['membre']. '</li>';
+      $ch_fin = '<li class="menuPerso"><a href="'.$urlOut.'">'.CONNECT_LOGOUT.'</a></li></ul>';
+      $chaine_finale = $chaine.$ch_resp.$ch_fin;
     }
     else {
-      $chaine = "<p class=\"connect\">".CONNECT_WELKOM." <br />"
+      $chaine_finale = "<p class=\"connect\">".CONNECT_WELKOM." <br />"
       .'<a href="http://'.$_SERVER["SERVER_NAME"].'">'.BACK2SITE.'</a></p>';
     }
-    return $chaine;
+    return $chaine_finale;
   }
   /**  
   * function qui gère l'envoi du mail par appel de la classe phpmailer

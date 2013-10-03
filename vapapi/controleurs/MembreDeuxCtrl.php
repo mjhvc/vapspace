@@ -135,6 +135,8 @@ class MembreCtrl extends ABS_Membre
   {
     $out = false;
     $this->globalEntities();               
+    if (empty($tableau["genre"])) { $this->vue->civil = $this->getSelect("genre",$this->civilite);}
+    else { $this->vue->civil = $this->getSelect("genre",$this->civilite,$tableau["genre"]);}
     if ($action == 'inscription' || $this->action == 'install') { 
       $this->vue->choix_script = BASEURL."index.php?ctrl=membre&amp;action=inscrire&amp;phase=un";        
       $this->vue->cachez = ''; 

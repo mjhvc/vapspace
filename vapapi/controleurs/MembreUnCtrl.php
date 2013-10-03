@@ -98,6 +98,8 @@ class MembreCtrl extends ABS_Membre
     else { $this->vue->confirmation = ''; } 
     if (empty($cleant)) { $this->vue->select = $this->getSelect($this->champPassif,$this->allAntennes); }
     else {  $this->vue->select = $this->getSelect($this->champPassif,$this->allAntennes,$cleant); } 
+    if (empty($tableau["genre"])) { $this->vue->civil = $this->getSelect("genre",$this->civilite);}
+    else { $this->vue->civil = $this->getSelect("genre",$this->civilite,$tableau["genre"]);}
     if (($action == 'inscription') || ($action == 'sansMail') || ($action == 'install')) { 
       $this->vue->choix_script = BASEURL."index.php?ctrl=membre&amp;action=inscrire";        
       $this->vueSpam($this->statut);

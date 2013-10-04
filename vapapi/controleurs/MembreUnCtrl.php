@@ -82,24 +82,26 @@ class MembreCtrl extends ABS_Membre
   */
   private function vueFormulaire($action,$valppk=NULL,$tableau=array(),$mode=NULL)
   {
-    $out = false;
+    $out = false; $genre='';
     $this->globalEntities();
     $this->vueStatut($this->statut);
     $this->vueRecommand(); // appel (dans classe parente) du chargement de entite multiRecomm
     if (empty($mode)) { //On est avec un tableau 2D extrait de la base
       $clereg = $tableau[T_HUM]['lienreg']; 
+      $genre = $tableau[T_HUM]['genre'];
       $cleant = $tableau[T_CORE]['lienant'];
     }
     else { //retour client à 1D
       if (!empty($tableau['lienreg'])) { $clereg = $tableau['lienreg']; } 
       if (!empty($tableau['lienant'])) { $cleant = $tableau['lienant']; }
+      if (!empty($tableau['genre'])) { $genre =$tableau['genre']; } 
     }
     if (! empty($tableau['confirmation'])) { $this->vue->confirmation = $tableau['confirmation']; }
     else { $this->vue->confirmation = ''; } 
     if (empty($cleant)) { $this->vue->select = $this->getSelect($this->champPassif,$this->allAntennes); }
     else {  $this->vue->select = $this->getSelect($this->champPassif,$this->allAntennes,$cleant); } 
-    if (empty($tableau["genre"])) { $this->vue->civil = $this->getSelect("genre",$this->civilite);}
-    else { $this->vue->civil = $this->getSelect("genre",$this->civilite,$tableau["genre"]);}
+    if (empty($genre)) { $this->vue->civil = $this->getSelect("genre",$this->civilite);}
+    else { $this->vue->civil = $this->getSelect("genre",$this->civilite,$genre); }
     if (($action == 'inscription') || ($action == 'sansMail') || ($action == 'install')) { 
       $this->vue->choix_script = BASEURL."index.php?ctrl=membre&amp;action=inscrire";        
       $this->vueSpam($this->statut);

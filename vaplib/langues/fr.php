@@ -39,6 +39,8 @@ define("ENT_REGIO",'Une Région');
 define("ENT_REGIOS",'Les Regions');
 define("ENT_SOCIETY",'Société de Transports ');
 define("ENT_SOCIETIES",'Sociétés de Transports ');
+define("ENT_STATS_REG",'Stats par Région');
+define("ENT_STATS_GLOB","Globalité du site");
 define("ENT_CHATS_LAST","Les derniers Chats");
 define("ENT_NEWS",'Une newsletter');
 define("ENT_NEWS_STANDBY","Les News en attente");
@@ -96,6 +98,14 @@ define("MBR_MAIL_RESP_SUJET",'Nouvelle inscription aux VAP');
 define("MBR_WELKOM","Votre inscription aux VAP est enregistrée,<br /> merci et bienvenu(e) dans l\'espace membre, un outil libre et public destiné à échanger des infos de mobilité entre membres.");
 define("MBR_ROUTE_SUBSC","Trajet enregistré, merci");
 define("MBR_UPDATE","Vos données sont à jour, merci");
+define("MBR_PIEDS","Piétons");
+define("MBR_AUTOS","Automobilistes");
+define("MBR_DEUX","Deux usages");
+define("MBR_FEM","Membres_Féminins");
+define("MBR_MAL","Membres_Masculins");
+define("MBR_GLB_REG","Membres");
+define("MBR_GLB_GLB","Global");
+define("MBR_GLB_MOB","Voyagent_Avec");
 define("CHAT_ALL","Tout le chat ");
 define("CHAT_MONTH","Chat mensuel ");
 define("MBR_TRIPS","Mes trajets");
@@ -147,6 +157,8 @@ define("FILE_CSV_TIT",'fichier csv des membres de :');
 * Controleur SponsorCtrl.php
 */
 define("SPONS_TIT",'VAP : transports publics');
+define("SPONS_AVEC","Voyagent_Avec_abonnement");
+define("SPONS_SANS","Voyagent_Sans_abonnement");
 /**
 * controleur NewsCtrl.php
 */

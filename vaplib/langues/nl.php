@@ -38,6 +38,8 @@ define("ENT_REGIO",'Een gewest');
 define("ENT_REGIOS",'Gewesten');
 define("ENT_SOCIETY","Vervoersmaatschappij");
 define("ENT_SOCIETIES",'Vervoermaatschapijen');
+define("ENT_STATS_REG",'Statistische berekening');
+define("ENT_STATS_GLOB","Hele Website");
 define("ENT_CHATS_LAST","De meest recente chats ");
 define("ENT_LOC",'Een trefpunt');
 define("ENT_NEWS",'De nieuwsbrieven');
@@ -96,6 +98,14 @@ define("CHAT_ALL","Alle chats");
 define("CHAT_MONTH","Chats van de maand ");
 define("MBR_TRIPS","Mijn trajecten");
 define("MBR_NOTRIPS"," : De trajektenbibliotheek is leeg. <br />Een nieuwe trajekt inschrijven zal interactie via e-mail met andere VAP-leden bevorderen.");
+define("MBR_PIEDS","Voetgangers");
+define("MBR_AUTOS","Autobestuurders");
+define("MBR_DEUX","Beiden");
+define("MBR_FEM","Vrouwelijke_leden");
+define("MBR_MAL","Mannelijke_leden");
+define("MBR_GLB_REG","De_hele_Gebied  ");
+define("MBR_GLB_GLB","Globaal");
+define("MBR_GLB_MOB","Reizen_Met");
 define("MBR_CHATS","Mijn VAP-chats");
 define("MBR_NOCHATS"," : Nog geen chats ");
 define("MAIL_CONTACT_MBR","Een e-mail is verzonden, hij vermeldt het e-mailadres van de contactpersoon, dank u.");
@@ -143,6 +153,8 @@ define("FILE_CSV_TIT",'csv file leden van :');
 * Controleur SponsorCtrl.php
 */
 define("SPONS_TIT",'VAP : openbaar vervoer');
+define("SPONS_AVEC","Reizen_Met_abonnement");
+define("SPONS_SANS","Reizen_Zonder_abonnement");
 /**
 * controleur NewsCtrl.php
 */

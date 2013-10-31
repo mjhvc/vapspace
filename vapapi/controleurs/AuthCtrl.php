@@ -94,7 +94,7 @@ class AuthCtrl extends Controleur
           $ramasseError[] = $testOblig;
         }
         elseif (! $ctldns = $this->filtre->filtreDns($tableau['mail'])){
-          $ramasseError[] =  $tableau['mail'].AUTH_MAIL_ERROR;
+        $ramasseError[] =  $tableau['mail'].AUTH_MAIL_ERROR;
         }
         elseif ( $tableau['mail'] == MBR_NOMAIL ) {
           $ramasseError[] =  $tableau['mail'].AUTH_MAIL_PERMIS;

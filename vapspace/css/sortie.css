@@ -198,7 +198,7 @@ p.right a:hover,p.piedleft a:hover {
   max-width:96%;
   margin: 0 auto;
 }
-#nav ul {
+#vapspace ul {
   color: #0c8455;
   list-style-type:none;
   border-left:1px inset #2f765b;
@@ -501,3 +501,43 @@ table.test a img
 {
   border:none;
 }
+/* Travail sur la methode MembreCtrl::Stats */
+.chartlist li {
+  position: relative;
+  display: block;
+}
+
+.chartlist .count {
+  display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: 0 0.3em;
+      text-align: right;
+      color: navy; /*#999;*/
+      font-weight: bold;
+      font-size: 0.875em;
+      z-index: 4;
+}
+
+.chartlist li a {
+      display: block;
+      padding: 0.4em 4.5em 0.4em 0.5em;
+      margin-left:-5%;
+      position: relative;
+      z-index: 2;
+}
+
+.chartlist .pcent {
+      display: block;
+      max-width:83%;      
+      margin-left: 15%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      z-index:4;
+      background: #c4b7a7; /*B8E4F5*/;
+      /*text-indent: -9999px;*/
+      /*overflow: hidden;*/
+    }

@@ -13,6 +13,16 @@
    <li> <a href="{url_ger}">{nom_ger}</a></li>
   <!-- END menuGerer -->
   <li>
+  <li>
+    <form method="post" action="{gerer_stat}">
+    <fieldset><legend>{stat_region}</legend>
+       <p>
+        {selectRegions} <br />
+        <input type="submit" value="{iter_meet}" name="submit" />
+      </p>
+    </fieldset>
+    </form>
+  </li>
     <form method="post" action="{gerer_lieu}">
        <p>
         <label for="antenne">{iter_meet_ant}</label>

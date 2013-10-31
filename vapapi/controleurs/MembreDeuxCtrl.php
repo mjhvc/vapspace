@@ -480,8 +480,9 @@ class MembreCtrl extends ABS_Membre
   public function index() 
   {
     try { 
-      if (filter_has_var(INPUT_GET,'token')) { $token = $_GET['token']; } 
+      if (filter_has_var(INPUT_GET,'token')) { $token = $_GET['token']; }
       else { $token = NULL; }
+      
       if (! $ok = $this->validSess($token)){
         $loc = "Location: ".BASEURL."index.php?ctrl=auth&action=index&sess=ko";
         header($loc);
@@ -512,8 +513,11 @@ class MembreCtrl extends ABS_Membre
         }             
         $cle_mbr = intval($_SESSION['idhum']);               
         $nomAntenne = $this->allAntennes[$idant];
+         
         $urlIterOffre = BASEURL."index.php?ctrl=iter&amp;action=voir&amp;deal=offre&amp;token=".$token."&amp;antiterlieu=".$idant."&amp;iterlieu=";
         $urlIterDemande = BASEURL."index.php?ctrl=iter&amp;action=voir&amp;deal=demande&amp;token=".$token."&amp;antiterlieu=".$idant."&amp;iterlieu=";
+        $urlRegStats = BASEURL."index.php?ctrl=membre&amp;action=stats&amp;token=".$token."&amp;regstat=";     
+        
         $this->globalEntities($idant);         
         $this->vue->url_chatPost = BASEURL."index.php?ctrl=chat&amp;action=poster&amp;chatidant=".$idant."&amp;token=".$token; 
         $this->vue->url_chatGlb =  BASEURL."index.php?ctrl=chat&amp;action=voirGlob&amp;chatidant=".$idant."&amp;token=".$token;        
@@ -527,6 +531,8 @@ class MembreCtrl extends ABS_Membre
         $this->vue->chatGlob =  CHAT_ALL.$nomAntenne;                            
         $this->vue->chatMens =  CHAT_MONTH;
         $this->vue->urlDelMbr = BASEURL."index.php?ctrl=membre&amp;action=supprimer&amp;token=".$token."&amp;line=".$cle_mbr;
+        //$this->vue->ensRegions = parent::getSelect('regstat',$this->allRegions);
+        //$this->vue->url_stat = $urlMbrStats;      
         
         if ($_SESSION['iters'] > 0) {                          
           $this->vue->iterperso = MBR_TRIPS;  
@@ -553,7 +559,14 @@ class MembreCtrl extends ABS_Membre
           $this->vue->newListeAnt = $this->vue->getVar($cle);
           $this->vue->append('province','regions');
         }
-         if ($cacheChat = $this->recupData($idant,'Chat')) { 
+        $this->vue->setBlock("contenu","STATISTIQUES","statReg");
+        foreach ($this->allRegions as $cle=>$val) {
+          $this->vue->nomreg = $val;
+          $this->vue->urlRegStats = $urlRegStats.$cle;
+          $this->vue->append("statReg","STATISTIQUES");
+        }
+         
+        if ($cacheChat = $this->recupData($idant,'Chat')) { 
           $this->vue->setBlock("contenu","vapchats","chat");
           foreach($cacheChat as $id=>$chat) {  
             $this->vue->urlchat =  BASEURL."index.php?ctrl=chat&amp;action=editer&amp;chatppk=".$chat[0]."&amp;token=".$token."&amp;mode=single" ;
@@ -625,6 +638,156 @@ class MembreCtrl extends ABS_Membre
     else { $retour = MAIL_PROMO_OK ; }
     $this->output($retour);
   }
+  /**
+* La methode de gestion des statistiques membres
+*/
+  public function stats()
+{
+try {
+      if (filter_has_var(INPUT_GET,'token')) { $token = $_GET['token']; } 
+      else { $token = NULL; }      
+      if (! $ok = $this->validSess($token)){
+        $loc = "Location: ".BASEURL."index.php?ctrl=auth&action=index&sess=ko";
+        header($loc);
+      }      
+      elseif (! ($this->droits & MEMBRE)){ $this->vue->retour = MBR_NO_ACTION; }
+      else { 
+        if ((filter_has_var(INPUT_POST,'regstat')) && ($regstat = filter_input(INPUT_POST,'regstat',FILTER_VALIDATE_INT))) {
+          $condiReg = " AND H.lienreg='".$regstat."' ";
+          $this->vue->nomRegion = $this->allRegions[$regstat];
+        }
+        elseif ((filter_has_var(INPUT_GET,'regstat')) && ($regstat = filter_input(INPUT_GET,'regstat',FILTER_VALIDATE_INT))) {
+          $condiReg = " AND H.lienreg='".$regstat."' ";
+          $this->vue->nomRegion = $this->allRegions[$regstat];
+        }
+        else { 
+          $condiReg = ""; 
+          $this->vue->nomRegion = ENT_STATS_GLOB; 
+          $regstat = '0';
+        }
+        if (filter_has_var(INPUT_GET,'recalcul')) { $recalcul = true; }   
+        else { $recalcul = false; }       
+
+        //Les 4 requètes sql        
+        $genUtilStat = "SELECT COUNT(idvap) AS RST "
+          ." FROM ".T_CORE." C JOIN ".T_HUM." H ON C.idvap=H.idhum "
+          ." WHERE C.inscrit=:utilise and H.genre=:sex ". $condiReg;
+        $genMobStat = "SELECT COUNT(lienhum) as RST  "
+          ." FROM ".T_HUM_SOC." M JOIN ".T_HUM." H ON M.lienhum=H.idhum  "
+          ." WHERE M.lientrans=:idtrans "
+          ." AND M.utilisation='oui' "          
+          . $condiReg;
+        $antUtilStat = "SELECT COUNT(idvap) AS RST "
+          ." FROM ".T_CORE." C JOIN ".T_HUM." H ON C.idvap=H.idhum "
+          ." WHERE C.inscrit=:utilise and H.genre=:sex and C.lienant=:antenne";
+        $antMobStat = "SELECT COUNT(lienhum) as RST "  
+          ." FROM ".T_HUM_SOC." M, ".T_CORE." C, ".T_HUM." H "
+          ." WHERE M.lientrans=:idtrans "
+          ." AND C.lienant = :lienant "            
+          ." AND M.lienhum=H.idhum "
+          ." AND C.idvap = H.idhum " ;
+
+        //Les variables
+        $userVap = array('pieton','auto','deux');
+        $collect = $genCollect = array();
+        $collect[MBR_GLB_REG] = array(MBR_FEM=>0,MBR_MAL=>0,MBR_GLB_GLB=>0);
+        $collect[MBR_GLB_MOB] = array();
+        $moduo = $this->modele->getContexte($this->contexte,$this->statut);
+        $schema = $this->modele->getSchemaDataStatique();  
+        $dbh = $this->modele->getCnx();
+
+        //Calcul des statistiques de l'utilisation des VAP
+        $stmt = $dbh->prepare($genUtilStat);
+        foreach ($userVap as $util) {  
+          $stmt->bindParam(':utilise',$util,PDO::PARAM_STR);
+          $stmt->bindValue(':sex','F',PDO::PARAM_STR);
+          $stmt->execute();
+          $result = $stmt->fetch(PDO::FETCH_ASSOC);            
+          $collect[MBR_FEM][$util]  = $result['RST'];
+          $stmt->bindValue(':sex','M',PDO::PARAM_STR);
+          $stmt->execute();
+          $result = $stmt->fetch(PDO::FETCH_ASSOC); 
+          $collect[MBR_MAL][$util]  = $result['RST'];
+        }
+        // Calcul des statitstiques de mobilités (sociétés et abonnements)
+        $genMobStatUn = $genMobStat." AND M.abonne='non' ";
+        $stmt = $dbh->prepare($genMobStatUn);
+        foreach ($schema as $nom=>$opt) { $antMob[$nom] = $opt['valCleLiaison']; }
+        foreach ($antMob as $soc=>$idtrans){
+          $stmt->execute(array(':idtrans'=>$idtrans));
+          $rslt = $stmt->fetch(PDO::FETCH_ASSOC);
+          $collect[SPONS_SANS][$soc] = $rslt['RST'];      
+        }
+        $genMobStatDeux =  $genMobStat. " AND M.abonne='oui' ";
+        $stmt = $dbh->prepare($genMobStatDeux);
+        $antMob = array();
+        foreach ($schema as $nom=>$opt) { $antMob[$nom] = $opt['valCleLiaison']; }
+        foreach ($antMob as $soc=>$idtrans){
+          $stmt->execute(array(':idtrans'=>$idtrans));
+          $rslt = $stmt->fetch(PDO::FETCH_ASSOC);
+          $collect[SPONS_AVEC][$soc] = $rslt['RST'];      
+        }
+        //calcul des statistiqes globales
+        foreach ($collect[MBR_FEM] as $cle=>$cpt) { $collect[MBR_GLB_REG][MBR_FEM] += $cpt; }
+        foreach ($collect[MBR_MAL] as $key=>$xpt) { $collect[MBR_GLB_REG][MBR_MAL] += $xpt; }
+        $dividende = $collect[MBR_GLB_REG][MBR_GLB_GLB] = $collect[MBR_GLB_REG][MBR_FEM] + $collect[MBR_GLB_REG][MBR_MAL] ;
+        foreach ($antMob as $soc=>$idtrans) {
+          $collect[MBR_GLB_MOB][$soc] = $collect[SPONS_AVEC][$soc] + $collect[SPONS_SANS][$soc];  
+        }
+        ksort($collect);              
+        //mise en place des données.     
+        foreach ($collect as $lettre=>$tableau) { 
+          $typoTab = array();  $cleTypo = '';        
+          foreach ($tableau as $cle=>$cpt) {
+            if ($cle == 'pieton'){ $cleTypo = MBR_PIEDS; }
+            elseif ($cle == 'auto'){ $cleTypo = MBR_AUTOS; }
+            elseif ($cle == 'deux'){ $cleTypo = MBR_DEUX; }
+            else { $cleTypo = $cle; }
+            $valpourcent = $this->pourcentage($cpt,$dividende);
+            $typoTab[$cleTypo] = $cpt.','.$valpourcent;
+            $genCollect[$lettre] = $typoTab;  
+          } 
+        } 
+        // Gestion du cache et de la vue
+        $this->globalEntities();                
+        $masq = $regstat.'_stats.html';
+        $cache = DIRCACHE.'regions/'.$regstat.'/'.$masq;
+        $delais = 86400;
+        $this->creerCache($this->allRegions,$nom='regions');   
+        if ($this->useCache($cache,$delais,$recalcul)) {
+          $this->vue->liste_cache = file_get_contents($cache);
+          $this->vue->setFile("contenu","stats_Membre_cache.tpl");   
+        }       
+        else {
+          $this->vue->setFile("contenu","voir_Membre_stats.tpl"); 
+          $this->vue->setBlock("contenu","genCollect","collect");
+          $this->vue->setFile("leStat","s_stat.tpl");
+          foreach($genCollect as $letter=>$data) {
+            $this->vue->genre = $letter;
+            $this->vue->setVar($letter,"");        
+            foreach ($data as $cle=>$val) { 
+              $pos = strpos($val,',');        
+              $this->vue->pourcent = $pcent = substr($val,($pos+1)); 
+              $this->vue->stat = $chiffre = substr($val,0,$pos) ; 
+              $this->vue->nomStat = $cle;
+              $this->vue->append($letter,"leStat");
+            }                      
+            $this->vue->li_stat = $this->vue->getVar($letter);
+            $this->vue->append('collect','genCollect');
+          }
+          $outCache = $this->vue->collect;
+          $this->ecrisCache($regstat,'_stats.html',$outCache,'regions');
+        }        
+        $this->vue->setFile("pied","pied.tpl"); 
+        $out = $this->vue->render("page");
+        $this->output($out);
+      }    
+  }
+  catch(MyPhpException $e) {
+      $msg = $e->getMessage();
+      $e->alerte($msg);  
+  }    
+}
   /**
 * la dernière methode lance la sortie: echo, servira  + tard pour une mise en cache
 */

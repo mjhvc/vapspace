@@ -919,6 +919,30 @@ class Controleur
     }      
   }
   /**
+  * Recopié du livre 'PHP5 avancé, ch gestion des caches, ¢Daspet & De Geyer, ed Eyrolles
+  * détermine si oui ou non (bool) il faut utiliser le cache
+  * @param $path : string, un chemin de fichier cache
+  * @param $delais :int le delais en secondes de validité du fichier cache
+  * retourne un booleen
+  */   
+  protected function useCache($path,$delais,$calc=NULL)
+  {
+    //a priori on utilise le cache
+    $use_cache = true;
+    //calculer le stamp du fichier cache, son delais depuis maintenant, et comparer avec delais fourni
+    if (file_exists($path)) {
+      $t = filemtime($path);
+      $ledelais = (time() - $t);
+      if (($ledelais < $delais) AND ($ledelais >= 0)){ $use_cache =true; }
+    }
+    else { $use_cache = false; }
+    //Faut-il forcer un recalcul ?
+    if ($calc) { $use_cache =false; }
+    else { $use_cache = true; }
+    return $use_cache;
+  }
+
+  /**
   * function ecrisCache : ecris $ligne dans le fichier $iDir.$masq
   * @param $ligne: string une chaine à ecrire
   * @param $iDir: int, identifie le numero de repertoire de cache dans DIRCACHANT

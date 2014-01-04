@@ -28,7 +28,7 @@
 */
 error_reporting(E_ALL|E_STRICT);
 date_default_timezone_set('Europe/Paris');
-//setlocale(LC_TIME,'fr_BE'); chargé depuis Controleur/cargerVue()
+//setlocale(LC_TIME,'fr_BE'); chargé depuis Controleur/chargerVue()
   
 /*
 * Declaration des chemins des fichiers (PATH)

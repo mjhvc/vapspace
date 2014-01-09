@@ -170,26 +170,33 @@ class NewsCtrl extends Controleur
       $e->alerte($msg);  
     }        
   }
-  /**
+	 /**
   * Retourne une requète sql variable qui fournit les mails des destinatiares 
   * selon les antennes sélectionnées pour une news dans '".T_NEWS_ANT."'
   * ce calcul est fait dans la methode choix()
+  * @param: $choixAnt array(), forme $choixAnt[integer]=(int)$lienant
   */ 
-  private function sqlmail($idnews)
+  private function sqlmail($idnews=NULL,$choixAnt=array())
   {
-	  $antennes=array(); $x = 0; $separator= ","; $finam =") ";
-	  $dbh = $this->modele->getCnx();	
-	  $sqlO = "SELECT lienant FROM ".T_NEWS_ANT." WHERE lienews = :idnews"; //sélection des antennes qui correspondent à $idnews dans ".T_NEWS_ANT." !
-	  $stmt = $dbh->prepare($sqlO);
-    $stmt->bindValue(':idnews',$idnews,PDO::PARAM_INT);
-    $stmt->execute();
-    while($rslt = $stmt->fetch(PDO::FETCH_ASSOC)) {
-	    $antennes[]= $rslt['lienant'];
+    $antennes=array(); $x = 0; $separator= ","; $finam =") ";    
+    if (!empty($idnews)) { 	  
+      $dbh = $this->modele->getCnx();	
+	    $sqlO = "SELECT lienant FROM ".T_NEWS_ANT." WHERE lienews = :idnews"; //sélection des antennes qui correspondent à $idnews dans ".T_NEWS_ANT." !
+	    $stmt = $dbh->prepare($sqlO);
+      $stmt->bindValue(':idnews',$idnews,PDO::PARAM_INT);
+      $stmt->execute();
+      while($rslt = $stmt->fetch(PDO::FETCH_ASSOC)) {
+	      $antennes[]= $rslt['lienant'];
+      }
+    }
+    else {
+			//recuperer le tableau $choixAnt et l'assimiler à $antennes ici 
+			$antennes = $choixAnt ;    
     }
     if ($antennes[0] == -1) { //valeur -1 pour la liste des responsables d'antenne
       $sqlM = "SELECT DISTINCT mail FROM ".T_HUM." WHERE statut='responsable'";
     }
-	  elseif ($antennes[0] == 0) {	//Si l'option 'tous' est stoquée dans ".T_NEWS_ANT.", la rquète concerne 'tous'
+		elseif ($antennes[0] == 0) {	//Si l'option 'tous' est stoquée dans ".T_NEWS_ANT.", la rquète concerne 'tous'
 		  $sqlM =  "SELECT mail FROM ".T_HUM.",".T_CORE
 						." WHERE ".T_CORE.".news = 'oui'"
 						." AND ".T_HUM.".mail NOT LIKE 'PasDeMail'"
@@ -211,6 +218,7 @@ class NewsCtrl extends Controleur
 	  }
 	  return $sqlM;	
   }
+   
   /**
   * Le moteur qui envoie les newsletters
   * ne traite que une news à la fois si elle est marquee comme active
@@ -584,7 +592,7 @@ class NewsCtrl extends Controleur
       $e->alerte($msg);  
     }        
   }
-  /**
+	/**
   * Voir() offre l'interface adéquate pour visionner ce que l'on vient de rédiger
   */
   public function voir()
@@ -602,19 +610,49 @@ class NewsCtrl extends Controleur
       elseif ($redac = $this->filtre->lockMoulin()) { 
         $this->vue->retour = NEWS_WORK.$redac; 
       }
-      elseif (empty($this->vue->retour)) { 
-        $this->vue->retour = $this->controler($_POST);
-        if (empty($this->vue->retour)) {
-          $this->action = "vueHtml"; 
-          if (empty($_POST['couleurtitre'])) { $_POST['couleurtitre'] = $this->titlecolor ; }
-          if (empty($_POST['couleurfond'])) { $_POST['couleurfond'] = $this->background ; }
-          if (empty($_POST['couleurpolice'])) { $_POST['couleurpolice'] = $this->color; }
-          $altcontenu = str_replace('<br />',"\n",$_POST['contenu']);
-          $altcontenu = strip_tags($altcontenu,'<a>');
-          $_POST['altcontenu'] = $altcontenu;      
-          $this->vue->contenu = $this->gestionVue($this->action,$_POST); 
-        } //Si erreurs: retour à action 'ecrire'
-        else { $this->vue->contenu = $this->gestionVue('ecrire',$_POST); } 
+      elseif (empty($this->vue->retour)) {
+        if (isset($_POST["fileNews"])){ 
+					$tabDir = $tabMail = array(); $ligne = ''; $format = 'd-m-Y';
+					$date = date($format);
+					$tabDir[$date] = $_SESSION['mail'];
+					//création du cache News appel parent::creerCache($tabDir,'news')
+					if ($ok = $this->creerCache($tabDir,$nom='news')) {	
+						$longNom = strpos($_SESSION['mail'],'@');
+						$fichier = substr($_SESSION['mail'],0,$longNom);
+						$masqFichier = '_'.$fichier.'.txt';
+						$nomFichier = $date.$masqFichier; 
+						$fullPath = DIRCACHE.'news'.'/'.$date.'/'.$nomFichier;				
+						//Récupérer le choix des antennes par appel de $this->choix($token)
+						$this->choixDestination = $this->choix($this->token);
+						//calculer la requete par appel de $this->sqlMail('',$this->choixDestination)
+						$sql = $this->sqlMail('',$this->choixDestination);
+						$dbh = $this->modele->getCnx(); 
+						$stmt = $dbh->prepare($sql);
+      			$stmt->execute();
+						while ($tabMail= $stmt->fetch(PDO::FETCH_ASSOC)){
+						 	$ligne .= $tabMail['mail']." \n";
+						} 
+						// ecrire le resulat dans DIRCACHE/news/$date
+						$ok = parent::ecrisCache($date,$masqFichier,$ligne,'news');
+						if ($ok = parent::downLoad($nomFichier,$fullPath)) { exit(0); }
+						else { throw new MyPhpException('Erreur fichier, sorry!'); }
+					}
+					return true; 
+				}  
+        elseif (isset($_POST["voirNews"])){
+          $this->vue->retour = $this->controler($_POST);
+          if (empty($this->vue->retour)) {
+            $this->action = "vueHtml"; 
+            if (empty($_POST['couleurtitre'])) { $_POST['couleurtitre'] = $this->titlecolor ; }
+            if (empty($_POST['couleurfond'])) { $_POST['couleurfond'] = $this->background ; }
+            if (empty($_POST['couleurpolice'])) { $_POST['couleurpolice'] = $this->color; }
+            $altcontenu = str_replace('<br />',"\n",$_POST['contenu']);
+            $altcontenu = strip_tags($altcontenu,'<a>');
+            $_POST['altcontenu'] = $altcontenu;      
+            $this->vue->contenu = $this->gestionVue($this->action,$_POST); 
+          } //Si erreurs: retour à action 'ecrire'
+          else { $this->vue->contenu = $this->gestionVue('ecrire',$_POST); } 
+        }
       }
       $this->vue->setFile('pied','pied.tpl');           
       $out = $this->vue->render('page');
@@ -625,6 +663,7 @@ class NewsCtrl extends Controleur
       $e->alerte($msg);  
     }        
   }
+  
  /**
   * La methode qui traite (aiguille via des varaibles $_GET) 3 actions : corriger news, tester news, enregistrer news
   */  

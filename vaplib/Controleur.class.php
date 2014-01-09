@@ -1008,4 +1008,23 @@ class Controleur
     }
     return $tab_2D;
   }
+	/**
+  * factorisation de l'action download
+  */
+  protected function downLoad($file,$pathFull)
+  {
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header("Content-disposition: attachment; filename=$file");            
+    header('Content-Transfer-Encoding: binary');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize($pathFull));
+    if (ob_get_length() > 0) { ob_clean(); }
+    flush();
+    readfile($pathFull);
+    if ($final = @readfile($pathFull)) { return true; }
+    else { return false; }
+  }
 }

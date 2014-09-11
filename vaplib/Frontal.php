@@ -64,7 +64,8 @@ class Frontal
     if ( ! method_exists($ctrl, $action)) { throw new MyPhpException ("L'action <b>$action</b> n'existe pas"); }
  
     // Et pour finir il n'y a plus qu'à  exécuter l'action
-    call_user_func(array($ctrl, $action));
+    if (call_user_func(array($ctrl, $action)))  { return true; }
+    else { return false; }
   }
 
   /**

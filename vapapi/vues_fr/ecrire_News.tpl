@@ -27,12 +27,9 @@ Un retour de ligne forcé dans un paragraphe se fait avec la balise: &lt;br /&gt;
     <!-- END antennes --> 
     <tr><td><input type="checkbox" name="toresp" value="respAnt" {respAnt}{respAnt_val} id="toresp" /><label for="toresp">Tous les responsables</label></td></tr> 
   </table>
-<<<<<<< HEAD
   <p><input type = "submit" name="voirNews" value="visionner la news" /> 
-=======
-  <p><input type = "submit" value="visionner la news" /> 
-	<p><input type = "submit" name="fileNews" value="Télécharger un mailing de membres" /> </p> 
->>>>>>> 9a91068aa9f70c4b34de8a084cb53ff24536c563
+  <p><input type = "submit" name="fileNews" value="Télécharger un mailing de membres" /> </p> 
+
 </form>
 </fieldset>
 

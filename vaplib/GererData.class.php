@@ -1,67 +1,43 @@
 <?php
-
-/******************************************************************************
-*    vapspace est un logiciel libre : vous pouvez le redistribuer ou le       *
-*    modifier selon les termes de la GNU General Public Licence tels que      *
-*    publi�s par la Free Software Foundation : � votre choix, soit la         *
-*    version 3 de la licence, soit une version ult�rieure quelle qu'elle      *
-*    soit.
-*
-*    vapspace est distribu� dans l'espoir qu'il sera utile, mais SANS AUCUNE  *
-*    GARANTIE ; sans m�me la garantie implicite de QUALIT� MARCHANDE ou       *
-*    D'AD�QUATION � UNE UTILISATION PARTICULI�RE. Pour plus de d�tails,       *
-*    reportez-vous � la GNU General Public License.                           *
-*
-*    Vous devez avoir re�u une copie de la GNU General Public License         *
-*    avec vapspace. Si ce n'est pas le cas, consultez                         *
-*    <http://www.gnu.org/licenses/>                                           *
-******************************************************************************** 
-*/
-
+ 
 /**
-* Class GererData :  traite les relations entre les donn�es et la database
-* se base sur la notion de contexte trait� par sa classe parente: IniData
-* @category vapspace
-* @copyright Marc Van Craesbeeck, 2011
-* @license GPL
-* @package MODELE
-* @version 1.0.0
-* @author marcvancraesbeeck@scarlet.be  
+@class GererData :  
+@brief traiter les actions entre les données clientes et la database.
+
+[basé sur la notion de contexte traité par sa classe parente IniData] (@ref IniData)
+
+@author marcvancraesbeck@scarlet.be
+@copyright [GNU Public License](@ref licence.dox)
 */
 include_once('IniData.class.php');
 
 class GererData extends IniData
 {
-  /**
-  * Declaration attributs 
-  */
-  protected $attributsAttendus = array();  
-  protected $champUtile = '';
-  protected $champInutile = '';  
-  protected $classement = array();  
-  protected $cleStat;
-  protected $cleSchemaTableStat = array();
-  protected $dataClientStat = array();  
-  protected $lastId ;   
-  protected $nomClePK;
-  protected $nomCleFK;
-  protected $nomContexte;  
-  protected $ofk;  
-  protected $tableStat;  
-  protected $valChampUtile = '';
-  protected $valChampinutile = '';  
-  protected $valofk;
-  protected $valPPK;
+  //Déclaration attributs 
+  protected $attributsAttendus = array();	/**<  pour appeller la méthode parente attributsTable */
+  protected $champUtile = '';	/**< string, le nom de la colonne de liaison employée */
+  protected $champInutile = '';	/**< string, le nom de la colonne de liaison non employée */
+  protected $classement = array();	/**< pour classer données, utilisé par inscrire, mettreajour */
+  protected $cleStat = '';	/**< le nom de la FK (de liaison) qui pointe sur la PK de table statique'*/  
+  protected $lastId ;	/**< integer, mémoriser le dernière PK introduite*/  
+  protected $nomClePK; /**< nom de la Principal Primary Key (PPK) */
+  protected $nomCleFK;	/**< nom d'une cle FK pointant vers la PPK */
+  protected $nomContexte; /**< nom du contexte */ 
+  protected $ofk;	/**< other foreign key, nom de cle FK qui ne pointe pas sur une PK de table statique*/
+  protected $tableLi;	/**< nom de la table de liaison */  
+  protected $valChampUtile = '';	/**< string, valeur employée par la colonne de liaison */
+  protected $valChampinutile = '';  /**< string, valeur attribuée à la colonne de liaison non utilisée */
+  protected $valofk;	/**< valeur de la other foreign key (ofk) */
+  protected $valPPK;  /**< valeur de la PPK */
  
-  /**
-  * Fonction __construct(), quelques initiations puis appellle methode parent  
+  /** construct réalise quelques initiations puis appelle la méthode parent.  
   */
   public function __construct($contexte=NULL,$statut=NULL)
   {
     //Initiation
-    $this->tableStat = $this->nomClePK = $this->nomCleFK = $this->ofk = $this->valofk = '';
+    $this->tableLi = $this->nomClePK = $this->nomCleFK = $this->ofk = $this->valofk = '';
     $this->champUtile = $this->valChampUtile = $this->champInutile = $this->valChampInutile = NULL;   
-    $this->attributsAttendus = $this->classement = $this->dataClientStat = array();  
+    $this->attributsAttendus = $this->classement = array();  
 
     //appel le constructeur parent en surchargeant les parametres
     if ($contexte != NULL && $statut != NULL) {
@@ -71,25 +47,25 @@ class GererData extends IniData
   }
   
   //-------------ENCAPSULATION de IniData pour les controleurs-------------------//
-  /**
-  * Un simple chargeur de contexte, 
-  * @param contexte:string est obligatoire
-  * @param $statut:string est obligatoire
+  
+	/** Charger le contexte selon un contexte et un statut, 
+  @param $contexte	string obligatoire
+  @param $statut	string obligatoire
+	@return array [parent::chargerContexte($contexte,$statut)] (@ref chargerContexte())
   */
   public function getContexte($contexte,$statut)
   {
     return $this->chargerContexte($contexte,$statut);
   }
-  /**
-  * getDataContexte: 
-  * @return $this->dataContexte calcul� par parent::chargerContexte($contexte,$statut)  
+  /** Charger le tableau du contexte et du statut en cours (pas de contexte ni de statut fourni) 
+  @return array calculé dans parent::chargerContexte($contexte_encours,$statut_encours)  
   */  
   public function getDataContexte()
   {
     return $this->dataContexte;  
   }
-  /**
-  * rechargerContexte: Appelle parent::rechargerContexte($contexte,$statut) 
+  /** Appel de parent::rechargerContexte($contexte,$statut). 
+	@return array	$this->dataContexte (en cours)
   */ 
   public function resetContexte($contexte,$statut){
     try {
@@ -102,173 +78,152 @@ class GererData extends IniData
       $e->alerte($msg);  
     }
   }
-  /**
-  * methode getLiensCles()
-  * @return $this->liensCles : array() calcul� par parent::chargerContexte($contexte,$statut)
+  /** Appel parent::$this->liensCles
+  @return $this->liensCles : array() calculé par parent::chargerContexte($contexte,$statut)
   */
   public function getLiensCles()
   {
     return $this->liensCles;
   }
-  /**
-  * getArrayContextes()
-  * @return un array() de tous les contextes
+  /** Tableau liste des contextes
+  @return array liste de tous les contextes
   */  
   public function getArrayContextes()
   {
     return $this->arrayContextes;
   }
-  /**
-  * getTables()
-  * @return parent::getTables()
+  /** Appel parent::getTables()
+  @return array	parent::getTables()
   */
   public function getTables($dyn=NULL)  
   {
     return parent::getTables($dyn);
   }
-  /**
-  * getDynTables()
-  * @return parent::getTables(1)
+  /** Appel de la liste des tables dynamiques du contexte
+  @return array	parent::getTables(1)
   */
   public function getDynTables()
   {
     $dynamique = 1;    
     return parent::getTables($dynamique);
   }
-  /**
-  * getPassiveTable()
-  * @return string parent::getPassiveTable()
+  /** Appel parent::getPassiveTable()
+  @return string  
   */
   public function getPassiveTable()
   {
     $passive = parent::getPassiveTable();
     return $passive;
   }
-  /**
-  * getLiaisonTable()  
-  * @return string $this->liaisonTable calcul� par parent::chargerContexte($contexte,$statut)
+  /** Appel du nom de la table de liaison selon contexte et statut en cours
+  * @return string $this->liaisonTable 
   */
   public function getLiaisonTable()
   {
     return $this->liaisonTable;
   }
-   /**
-  * getExtraTable() 
-  * @return array() avec le nom des tables extra
+   /** Appel des noms des tables extra du contexte et statut en cours. 
+  * @return array avec le nom des tables extra
   */
   public function getExtraTable()
   {
     $extraTable = parent::getExtraTable();
     return $extraTable;
   }
-  /**
-  * getPPK()
-  * @return le nom de la Primarey Principal Key (PPK) 
-  * la premiere PK de la premiere table d'un contexte
+  /** Le nom de la premiere PK de la premiere table dynamique d'un contexte
+  @return string  
   */
   public function getPPK()  
   {
      return $this->PPK;
   }
-  /**
-  * getExtraFK 
-  * @return array() un tableau des FK class�es dans [extra] uniquement 
+  /** Appel du tableau des clés FK classées [extra] dans le contexte.ini
+  * @return array un tableau des FK classées dans [extra] uniquement 
   */
   public function getExtraFK()
   {
     return $this->extraFK;
   }
-  /**
-  * getCnx()
+  /** Une instance de l'objet de connexion à la Base de Donnée (BD)
   * @return l'objet de la connexion en bd
   */
   public function getCnx()   
   {
     return $this->bd;
   }
-  /**
-  * getListeAttr()
-  * @return array(), la liste des attributs obligatoires et facultatifs li�s � un contexte
+  /** la liste des attributs obligatoires et facultatifs liés au contexte
+  @return array(), 
   */
   public function getListeAttr()
   {
     $liste = parent::getListeAttr();
     return $liste;
   }
-  /**
-  * getOblig()  
-  * @return array(), la liste des attributs obligatoires d'un contexte
+  /** la liste des attributs obligatoires au contexte
+  @return array(), 
   */
   public function getOblig()
   {
     $liste = parent::getOblig();
     return $liste;
   }
-  /**
-  * getFaculFull()  
-  * @return array(), la liste de tous les attributs Facul possibles (les statiques compris)
+  /** la liste de tous les attributs Facul possibles (les statiques compris)
+  @return array 
   */
   public function getFaculFull()
   {
     $liste = parent::getFaculFull();
     return $liste;
   }
-  /**
-  * getFaculDyn() 
-  * @return array(), la liste dynamique des attributs facultatifs
+  /** la liste des attributs facultatifs des tables dynamiques
+  @return array
   */
   public function getFaculDyn()
   {
     $liste = $this->dataFacul;
     return $liste;
   }
-  /**
-  * getStatiqueValeurs()
-  * @return array() $this->statiqueValeurs, calcul� par parent::chargerContexte($contexte,$statut)
+  /** La liste des valeurs [statiques] calculé par parent::chargerContexte($contexte,$statut)
+  @return array $this->statiqueValeurs, 
   */
   public function getStatiqueValeurs()
   {
     return $this->statiqueValeurs;
   }
-  /**
-  * getSchemaDataStatique()  
-  * @return array() $this->schemaDataStatique, calcul� par parent::chargerContexte($contexte,$statut)
+  /** La tableau calculé par parent::chargerContexte() sur base de contexte.ini[statique]
+  * @return array $this->schemaDataStatique
   */
   public function getSchemaDataStatique()
   {
     return $this->schemaDataStatique;
   }
-  /**
-  * getSchemaDataPassive()  
-  * @return array() $this->schemaDataPassive, calcul� par parent::chargerContexte($contexte,$statut)
+  /** La tableau calculé par parent::chargerContexte() sur base de contexte.ini[passive] 
+  * @return array $this->schemaDataPassive,  
   */
   public function getSchemaDataPassive()
   {
     return $this->schemaDataPassive;
   }
-  /**
-  * getVue()  
-  * @return array(),la liste des champs pour organiser la vue d'un contexte
-  * todo: inclure un parametre statut pour  selectionner une vue selon un statut, 
-  * modifier alors $this->dataVue en $this->dataVue['membre'] p.ex 
+  /** la liste des champs pour organiser la vue d'un contexte
+  @return array $this->dataVue
+  TODO: inclure un parametre statut pour  selectionner une vue selon un statut, 
+  modifier alors $this->dataVue en $this->dataVue['membre'] p.ex 
   */
   public function getVue()
   {
      return $this->dataVue;
   }
-  /**
-  * getMaGpc() stripslashes les donn�es extraites de la database
+  /** stripslashes les données extraites de la database
   */
   public function getmaGpc($tableau)
   {
     $newTab = $this->magicNormHTTP($tableau);
     return $newTab;
   }
-  /**
-  * getDataTable($table,$flag=NULL) appel parent::chargerTable()
-  * @param : $table:string le nom d'une table sql
-  * @param : $flag, bool
-  * @return array()
+  /** Charger le schéma d'une table
+  * @param	$table string le nom d'une table sql
+  * @param	$flag, bool
+  * @return array
   */
   public function getDataTable($table,$flag=NULL)
   {
@@ -279,8 +234,7 @@ class GererData extends IniData
     else { $data = parent::chargerTable($table);}
     return $data;
   }
-  /**
-  * R�cup�rer les variables fixes Hors-Antenne,Hors-Region et $mail
+  /** Récupérer les variables fixes Hors-Antenne,Hors-Region et $mail
   */
   public function getGeneral($type)
   { 
@@ -292,7 +246,7 @@ class GererData extends IniData
   //--------------protected---------------------//
   /**
   * dataEntity() connerti les elements html en entites html
-  * @param $chaine : string en entr�e
+  * @param $chaine : string en entrée
   * @return string, une chaine convertie
   */
   protected function dataEntity($chaine)
@@ -305,11 +259,11 @@ class GererData extends IniData
     return $propre;
   }
   /**
-  * preparation()  cr�e et retourne un tableau par Table avec 
+  * preparation()  crée et retourne un tableau par Table avec 
   * - comme cles : les noms des champs oblig et facul de la table du contexte en parametre 
   * - comme valeur: leurs valeurs PRISES DANS LA DATABASE
-  * @param $valcle, integer  est une FK (propre au contexte) ou un PK mais la FK du contexte sera selectionn�e en premier
-  * @param $table: string, nom de la table o� preparer les donnees
+  * @param $valcle, integer  est une FK (propre au contexte) ou un PK mais la FK du contexte sera selectionnée en premier
+  * @param $table: string, nom de la table oé preparer les donnees
   */
   protected function preparation($valcle,$table) 
   {    
@@ -317,8 +271,8 @@ class GererData extends IniData
     $this->table = strval($table); 
     $this->attributsAttendus = array(); $testkeys = NULL;     
     $this->schema = $this->schemaTable($this->table);
-    //Recherche du nom des cles FK ou PK qui repr�sentent la ligne � preparer 
-    //$valcle represente-t-il la valeur d'une cle etrang�re d'une table?     
+    //Recherche du nom des cles FK ou PK qui représentent la ligne é preparer 
+    //$valcle represente-t-il la valeur d'une cle etrangére d'une table?     
     foreach ($this->schema as $champ=>$option){
       if (($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $this->PPK)){
         $this->nomClePK = $champ;
@@ -333,12 +287,12 @@ class GererData extends IniData
         }
       }
     }
-    if (empty($testkeys)){ throw new MyPhpException("La table: ".$this->table." n'a pas de cl� primaire?");}
-    //construction et execution de la requete sql de selection selon la cl� (PK ou FK)  
+    if (empty($testkeys)){ throw new MyPhpException("La table: ".$this->table." n'a pas de clé primaire?");}
+    //construction et execution de la requete sql de selection selon la clé (PK ou FK)  
     $ptmq = " = ? ";  
     $whereSql = $this->nomClePK.$ptmq; 
     $fromSql = $this->table;  
-    //Recherche des attributs attendus dans la base de donn�e, l'appel de parent::attributsTable() est justifi�
+    //Recherche des attributs attendus dans la base de donnée, l'appel de parent::attributsTable() est justifié
     $this->attributsAttendus  = $this->attributsTable($this->table);    
     $nbr = count($this->attributsAttendus);      
     foreach ($this->attributsAttendus as $nomVal){    //Boucle sur les attributs oblig et facul
@@ -350,7 +304,7 @@ class GererData extends IniData
     $stmt = $this->bd->prepare($sql);
     $stmt->execute(array($valcle));
     
-    //le classement des donnees doit etre diff�rent selon que il s'agit d'une table de 'liaison' ou pas 
+    //le classement des donnees doit etre différent selon que il s'agit d'une table de 'liaison' ou pas 
     if ($this->table == $this->liaisonTable){
       while ($ligne = $stmt->fetch(PDO::FETCH_ASSOC)){
         $tableBaseCont[$x] = $ligne;
@@ -371,10 +325,10 @@ class GererData extends IniData
   * 'nom' est le nom d'une valeur statique selectionnee precedemment par dataClasse()
   * valeur est la valeur 'statique' de 'nom'
   * retourne un array() 
-  * avec comme cl�s : un nom des colonnes parmis FK et 'champs sp�cifiques' de la table de liaison 
+  * avec comme clés : un nom des colonnes parmis FK et 'champs spécifiques' de la table de liaison 
   * avec comme valeurs : la valeur de ces colonnes pour la table de liaison (sauf pour la cle FK vers PPK)
   * Cette methode fait donc la relation entre des valeurs statiques et 
-  * les valeurs ad hoc diff�rentes mais li�es sur la table de liaison
+  * les valeurs ad hoc différentes mais liées sur la table de liaison
   * exemple : 
   * entree parametre statique : 'STIB' 'ouiavec',  
   * sortie array('lienhum'=>'idhum,'lientrans'=>12,'utilisation'=>'oui','abonne'=>'oui') 
@@ -384,11 +338,11 @@ class GererData extends IniData
   {
     $tableaustat = array(); $laclefk = array();
     if (!$nom || !$valeur) { //aucuns choix statique mais le contexte statique existe bien            
-      //Parcourir le tableau des cles etrang�res du contexte      
+      //Parcourir le tableau des cles etrangéres du contexte      
       foreach ($this->liensCles as $name=>$val){  
-        //D�tecter les cles FK de $this->liensCles presentent dans $this->schemaLiaison        
+        //Détecter les cles FK de $this->liensCles presentent dans $this->schemaLiaison        
         if (isset($this->schemaLiaison[$name])){
-          //D�tection du nom de la FK qui pointe vers le PPK du contexte 
+          //Détection du nom de la FK qui pointe vers le PPK du contexte 
           if ($this->schemaLiaison[$name]["cleSecondaireRelie"] == $this->PPK){ 
             $tableaustat[$name] = $val;  
           }
@@ -397,7 +351,7 @@ class GererData extends IniData
           }
         }      
       }
-      if (! empty($this->liaisonChamps)) { //Si des champs sp�cifiques � la table de liaison existent 
+      if (! empty($this->liaisonChamps)) { //Si des champs spécifiques é la table de liaison existent 
         foreach ($this->liaisonChamps as $champ){ 
           $tableaustat[$champ] = $this->schemaLiaison[$champ]['default'];  
         }
@@ -406,7 +360,7 @@ class GererData extends IniData
     else {          
       //detecter la table de liaison, le nom et la valeur de la FK de la table de liaison 
       //qui pointent vers les valeurs 'Statiques'  
-      $this->tableStat = $this->schemaDataStatique[$nom]['tableLiaison'];            
+      $this->tableLi = $this->schemaDataStatique[$nom]['tableLiaison'];            
       $this->cleStat = $this->schemaDataStatique[$nom]['cleLiaison'];          
       $this->valCleStat = $this->schemaDataStatique[$nom]['valCleLiaison'];         
       //detecter le nom de la FK de liaison qui pointe sur la PPK         
@@ -419,8 +373,8 @@ class GererData extends IniData
       $tableaustat[$this->cleStat] = $this->valCleStat; //la cle FK statique et sa valeur reelle
       $tableaustat[$this->ofk] = $this->valofk;         //la cle PPK et le nom de la PPK en valeur
       
-      //relie 'valeur'(statique) fournie en param�tre aux champs de 'liaison' sur la table de liaison :
-      //Une 'valeur statique' �tabli une relation avec une valeur champ 'specifique' sur la table de liaison  
+      //relie 'valeur'(statique) fournie en paramétre aux champs de 'liaison' sur la table de liaison :
+      //Une 'valeur statique' établi une relation avec une valeur champ 'specifique' sur la table de liaison  
       if (!empty($this->statiqueValeurs)) {         
         foreach ($this->statiqueValeurs as $idx=>$mot){   
           if ($mot == $valeur){ 
@@ -453,11 +407,11 @@ class GererData extends IniData
   * methodes attributsTable()  -> IniData
   * boucle foreach 1 : Boucle sur toutes les tables dynamiques du contexte
   * sous_boucle foreach 1-1: Boucle sur les attributs oblig et facul
-  * sous_boucle foreach 1-2: Recherche d'une cle FK si semblable � $this->PPK  et non list�e dans attributsAttendus
-  * boucle foreach 2 : Boucle  sur toutes les donnees  du contexte � la recherche de donnees 'Statiques'      
-  * Si le mod�le inclus une structure statique:
-  * sous_boucle 2-1 sur le tableau fourni; detection donn�es statique dans tableau client et
-  * appel de chargeDataStat() avec les donnees ou pas de donn�es 
+  * sous_boucle foreach 1-2: Recherche d'une cle FK si semblable é $this->PPK  et non listée dans attributsAttendus
+  * boucle foreach 2 : Boucle  sur toutes les donnees  du contexte é la recherche de donnees 'Statiques'      
+  * Si le modéle inclus une structure statique:
+  * sous_boucle 2-1 sur le tableau fourni; detection données statique dans tableau client et
+  * appel de chargeDataStat() avec les donnees ou pas de données 
   * certains attributsAttendus sont facultatifs...tres important ici...pour de la souplesse
   * c'est la couche 'controle" qui verifiera la presence obligatoire de certaines donnees      
   * Retourne un array : 
@@ -511,8 +465,8 @@ class GererData extends IniData
     return $wagon;
   }
   /**
-  * Injecter: Possibilit� d'injecter ici plusieurs donn�es non class�e(ni oblig ni facul) 
-  * @arg $dataIn, les donnee�s � injecter et la table d'injection type: array($table,array($nomChamp),array($valChamp))
+  * Injecter: Possibilité d'injecter ici plusieurs données non classée(ni oblig ni facul) 
+  * @arg $dataIn, les donneeés é injecter et la table d'injection type: array($table,array($nomChamp),array($valChamp))
   * @arg $trier, type array: le tableau de valeurs initiales.
   */    
   protected function Injecter($trier,$dataIn)
@@ -580,7 +534,7 @@ class GererData extends IniData
       $marqueur = ":".$cle;         
       $stmt->bindValue($marqueur,$val,$data_type);  
     } 
-    //Ex�cution de la requete prepar�e.    
+    //Exécution de la requete preparée.    
     if ($ok = $stmt->execute()) { 
       $lastId = intval($this->bd->lastInsertId());
       $stmt = NULL;
@@ -589,13 +543,13 @@ class GererData extends IniData
     else { throw new MyPhpException('Impossible d\'inserer la donnee');}
   }
   /**
-  * La requete de mise � jour d'une ligne d'une table
+  * La requete de mise é jour d'une ligne d'une table
   * @param $nomtable : la table sur laquelle faire un update
-  * @param $train : array() le train des valeurs � mettre � jour
-  * @param $id :integer, la valeur de la PK de la ligne � mettre � jour
+  * @param $train : array() le train des valeurs é mettre é jour
+  * @param $id :integer, la valeur de la PK de la ligne é mettre é jour
   * @param $flag:(NULL) un drapeau pour evaluer si l'update doit se baser sur une FK
   * note : $train peut etre minimaliste...
-  * donc, p.ex la mise � jour du champ numbr de spip_vap_core peut s'effectuer par appel de cette methode 
+  * donc, p.ex la mise é jour du champ numbr de spip_vap_core peut s'effectuer par appel de cette methode 
   * depuis le controleur MembreCtrl.php 
   */ 
   protected function update($nomTable,$train,$id,$condExtra=NULL)
@@ -616,7 +570,7 @@ class GererData extends IniData
           if ($option['clePrimaire']){ $nomCle = $nom; $testkeys = 1; }
         }   
       }
-      if (empty($testkeys)){ throw new MyPhpException ("La table: ".$this->table." n'a pas de cl� primaire en update()??");}
+      if (empty($testkeys)){ throw new MyPhpException ("La table: ".$this->table." n'a pas de clé primaire en update()??");}
       //creation des chaines $listeNomAttr et $listeValAttrib avec le $sep(arateur)
       //creation de la requete sql     
       foreach ($train as $cle=>$val){
@@ -653,8 +607,8 @@ class GererData extends IniData
   * Appelle 2 methodes :
   * $this->dataClasse pour le tri selon les tables
   * $this->insertion pour le traitement sql
-  * @param $tableau: array() le tableau de donnee � ins�rer
-  * @param $injection: array() eventuellement un array suppl�mentaire pour injection
+  * @param $tableau: array() le tableau de donnee é insérer
+  * @param $injection: array() eventuellement un array supplémentaire pour injection
   */
   public function inscrire($tableau,$injection=array())
   {
@@ -667,13 +621,13 @@ class GererData extends IniData
     else { $this->classement = $premTri; }
     $tableIns = array_keys($this->classement); 
     foreach ($tableIns as $table){               
-      // Bien que trait�e en premier ici, $id doit exister donc une donn�e statique vient apr�s une standart      
+      // Bien que traitée en premier ici, $id doit exister donc une donnée statique vient aprés une standart      
       if ($table == $this->liaisonTable){ 
         foreach ($this->classement[$table] as $nbr=>$tabliaison){
           $idliaison = $this->insertion($table,$tabliaison,$id);
         }
       }
-      else { //premier enregistrement? on recupere lastid et l'attribue � id et � valPPK
+      else { //premier enregistrement? on recupere lastid et l'attribue é id et é valPPK
         $this->lastId = $this->insertion($table,$this->classement[$table],$id);
         if ($x == 0) { 
           $this->valPPK= $this->lastId; 
@@ -685,8 +639,8 @@ class GererData extends IniData
     return $this->valPPK;
   }
   /**
-  * Met a jour un contexte multi table par appel � update(unetable)
-  * @param $tableau: array() tableau de donn�es  
+  * Met a jour un contexte multi table par appel é update(unetable)
+  * @param $tableau: array() tableau de données  
   * @param $clelligne: integer la valeur d'une ligne 
   */
   public function mettreajour($tableau,$cleligne,$injection=array())
@@ -724,7 +678,7 @@ class GererData extends IniData
     return $sortie;
   }
    /**
-  * Fonction multi table qui selectionne en DATABASE  et retourne l'ensemble des donnees li�es � la PPK d'un contexte.
+  * Fonction multi table qui selectionne en DATABASE  et retourne l'ensemble des donnees liées é la PPK d'un contexte.
   * Pour toute table 'dynamique', les donnees sont : $tableau[$nomTable][$attribut]=$valeur
   * Pour les tables de liaisons, les donnees sont : $tableau[$idx][$attribut]=$valeur
   * $idx est de type INT, $nomTable est de type ASSOC ...c'est permis
@@ -733,9 +687,9 @@ class GererData extends IniData
   {
     $retour = array(); $tableauliaison = array(); $x = 0;
     if (empty($clePK)) {
-      throw new MyPhpException("Cl� de selection invalide");
+      throw new MyPhpException("Clé de selection invalide");
     } 
-    $this->valPPK = intval($clePK); //valPPK est la valeur de la PK de la premi�re table du contexte
+    $this->valPPK = intval($clePK); //valPPK est la valeur de la PK de la premiére table du contexte
     foreach ($this->dynTables as $nomtable){     
      $retour[$nomtable] = $this->preparation($this->valPPK,$nomtable);
     }
@@ -754,7 +708,7 @@ class GererData extends IniData
   * Retourne une ligne de table car on selectionne sur une PK
   * $valcle: string, la valeur de la PK de $table
   * $table: string, la table sur laquelle travailler 
-  * $colonnes: array(), facultatif mais permet de moduler les colonnes selectionn�es 
+  * $colonnes: array(), facultatif mais permet de moduler les colonnes selectionnées 
   */
   public function selectUneLigne($valcle,$table,$colonnes=array())  
   {
@@ -762,11 +716,11 @@ class GererData extends IniData
     $this->table = $table;
     $valcle = intval($valcle);
     $this->schema = $this->schemaTable($this->table);
-    //Recherche du nom des cles FK ou PK qui repr�sentent la ligne � preparer      
+    //Recherche du nom des cles FK ou PK qui représentent la ligne é preparer      
     foreach ($this->schema as $champ=>$option){
       if ($option['clePrimaire']) { $this->nomClePK = $champ;}    
     }
-    if (empty($this->nomClePK)){ trigger_error("La table: ".$this->table." n'a pas de cl� primaire?",E_USER_ERROR);}
+    if (empty($this->nomClePK)){ trigger_error("La table: ".$this->table." n'a pas de clé primaire?",E_USER_ERROR);}
     if (empty($colonnes)) {    
       $sql = "SELECT * FROM $this->table WHERE $this->nomClePK = :pk";
     }
@@ -790,11 +744,11 @@ class GererData extends IniData
   }
   /**
   * Methode de selection de ligne par valeurs, 
-  * employ�e par (Chat,Help,Membre,News)Ctrl.php pour selectionner une seule ligne
-  * employ�e par Iter.php pour selection multiple ligne 
-  * @param $colonnes, array() : un tableau des colonnes � selectionner
+  * employée par (Chat,Help,Membre,News)Ctrl.php pour selectionner une seule ligne
+  * employée par Iter.php pour selection multiple ligne 
+  * @param $colonnes, array() : un tableau des colonnes é selectionner
   * @param $tables, str: la table de selection
-  * @param $nomval, str, nom de la colonne qui conditionne la s�lection
+  * @param $nomval, str, nom de la colonne qui conditionne la sélection
   * @param $varval, la valeur de la colonne de condition type variable
   * @param $all, bool, drapeau pour indiquer la methode de fetch
   */
@@ -829,8 +783,8 @@ class GererData extends IniData
     $this->table = $table;
     $valcle = intval($valcle);
     $this->schema = $this->schemaTable($this->table);
-    //Recherche du nom des cles FK ou PK qui repr�sentent la ligne � preparer      
-    // 1 si une 'vrai' cl� �trang�re est fournie    
+    //Recherche du nom des cles FK ou PK qui représentent la ligne é preparer      
+    // 1 si une 'vrai' clé étrangére est fournie    
     if (!empty($cle)){
       foreach ($this->schema as $champ=>$option){
         if (($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $cle)){
@@ -838,14 +792,14 @@ class GererData extends IniData
         } 
       }
     }
-    else {  // 2 sinon on se rabat sur une cle etrang�re qui pointe vers la PPK
+    else {  // 2 sinon on se rabat sur une cle etrangére qui pointe vers la PPK
       foreach ($this->schema as $champ=>$option){
         if (($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $this->PPK)){
           $this->nomCleFK = $champ; 
         }
       }
     }
-    if (empty($this->nomCleFK)){  throw new MyPhpException ("La table: ".$this->table." n'a pas de cl� secondaire ");}
+    if (empty($this->nomCleFK)){  throw new MyPhpException ("La table: ".$this->table." n'a pas de clé secondaire ");}
     $sql = "SELECT * FROM $this->table WHERE $this->nomCleFK = :fk " ; 
     $stmt = $this->bd->prepare($sql);
     $stmt->execute(array(':fk'=>$valcle));
@@ -857,8 +811,8 @@ class GererData extends IniData
     return $sortie;
   }
   /**
-  * Supprime les donnees li�s � un identifiant de contexte
-  * Suppose que $this->dataContexte est defini (par appel � $this->chargerContexte($contexte,$statut))
+  * Supprime les donnees liés é un identifiant de contexte
+  * Suppose que $this->dataContexte est defini (par appel é $this->chargerContexte($contexte,$statut))
   */
   public function supprime($valcle)
   {
@@ -886,11 +840,11 @@ class GererData extends IniData
     $this->table = $table;
     $valcle = intval($valcle);
     $this->schema = $this->schemaTable($this->table);
-    //Recherche du nom des cles FK ou PK qui repr�sentent la ligne � preparer
+    //Recherche du nom des cles FK ou PK qui représentent la ligne é preparer
     foreach ($this->schema as $champ=>$option){
       if ($option['clePrimaire']) { $this->nomClePK = $champ;$testPK = 1;}       
     }
-    if (empty($testPK)){ throw new MyPhpException ("La table: ".$this->table." n'a pas de cl� primaire?");}
+    if (empty($testPK)){ throw new MyPhpException ("La table: ".$this->table." n'a pas de clé primaire?");}
     $sql = "DELETE FROM $this->table WHERE $this->nomClePK = :pk";
     $stmt = $this->bd->prepare($sql);
     if ($stmt->execute(array(':pk'=>$valcle))){    
@@ -907,7 +861,7 @@ class GererData extends IniData
     $this->table = $table;
     $valcle = intval($valcle);
     $this->schema = $this->schemaTable($this->table);
-    //Recherche du nom des cles FK ou PK qui repr�sentent la ligne � preparer      
+    //Recherche du nom des cles FK ou PK qui représentent la ligne é preparer      
     if (!empty($cle)){
       foreach ($this->schema as $champ=>$option){
         if (($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $cle)){
@@ -922,7 +876,7 @@ class GererData extends IniData
         }
       }
     }    
-    if (empty($this->nomCleFK)){ throw new MyPhpException ("La table: ".$this->table." n'a pas de cl� secondaire?");}
+    if (empty($this->nomCleFK)){ throw new MyPhpException ("La table: ".$this->table." n'a pas de clé secondaire?");}
     $sql = "DELETE FROM $this->table WHERE $this->nomCleFK = :fk";
     $stmt = $this->bd->prepare($sql);    
     if ($stmt->execute(array(':fk'=>$valcle))){

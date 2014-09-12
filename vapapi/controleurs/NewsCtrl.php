@@ -630,7 +630,7 @@ class NewsCtrl extends Controleur
 						$stmt = $dbh->prepare($sql);
       			$stmt->execute();
 						while ($tabMail= $stmt->fetch(PDO::FETCH_ASSOC)){
-						 	$ligne .= $tabMail['mail']." \n";
+						 	$ligne .= $tabMail['mail']." \n"."\r";
 						} 
 						// ecrire le resulat dans DIRCACHE/news/$date
 						$ok = parent::ecrisCache($date,$masqFichier,$ligne,'news');

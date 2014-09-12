@@ -1,41 +1,20 @@
 <?php
 
-/******************************************************************************
-*    vapspace est un logiciel libre : vous pouvez le redistribuer ou le       *
-*    modifier selon les termes de la GNU General Public Licence tels que      *
-*    publiés par la Free Software Foundation : à votre choix, soit la         *
-*    version 3 de la licence, soit une version ultérieure quelle qu'elle      *
-*    soit.
-*
-*    vapspace est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE  *
-*    GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou       *
-*    D'ADÉQUATION À UNE UTILISATION PARTICULIÈRE. Pour plus de détails,       *
-*    reportez-vous à la GNU General Public License.                           *
-*
-*    Vous devez avoir reçu une copie de la GNU General Public License         *
-*    avec vapspace. Si ce n'est pas le cas, consultez                         *
-*    <http://www.gnu.org/licenses/>                                           *
-******************************************************************************** 
-*/
+/** @class UniConnect() 
+		@brief un singleton pour gérer une unique connexion sql par appel.
 
-/**
-  * class: UniConnect() est un singleton pour l'unique connexion à la BD
-  * sources : http://www.apprendre-php.com/tutoriels/tutoriel-47-classe-singleton-d-acces-aux-sgbd-integrant-pdo.html
-  * @access private
-  *  @package MODELE
-  *  @copyright Marc Van Craesbeeck : marcvancraesbeck@scarlet.be
-  *  @licence GPL
-  *  @version 1.0.0
-  */ 
+ 		[référence sur: apprendre-php.com] (http://www.apprendre-php.com/tutoriels/tutoriel-47-classe-singleton-d-acces-aux-sgbd-integrant-pdo.html) 
+		@author marcvancraesbeck@scarlet.be
+	  @copyright [GNU Public License](@ref licence.dox)
+*/ 
+
 class UniConnect 
 {
-  private static $statement = null;
-  private $pdoStatement = null;
+  private static $statement = null; /**<  paramètres propres à l'objet PDO*/
+  private $pdoStatement = null; /**<  paramètres propres à l'objet PDO*/
   
-  /**
-  * un __construct prive garanti le singleton : une seule instance de la classe est fournie
-  * pour tout le script.
-  */ 
+/**  Constructeur prive, garanti le singleton car une seule instance de la classe est fournir pour tout le script.
+*/ 
   private function __construct()
   { 
     try {    
@@ -50,6 +29,10 @@ class UniConnect
       print "Error from PDO : ".$e->getCode()."--".$e->getMessage()."<br />\n";
     }
   }
+
+	/** crée et retourne l'objet PDO
+	*/
+
   public static function getInstance() 
   {
     if(!isset(self::$statement)) {
@@ -57,6 +40,12 @@ class UniConnect
     }
     return self::$statement;
   }
+
+	/** exécution de l'objet PDO par methode d'appel magique php.
+	
+			@param $method string Le nom de la methode d'appel évoquée.
+			@param $argument array Le tableau des arguments évoqués par $method.
+	*/
   public function __call($method,$argument)
   {
     $args = implode(",",$argument);    

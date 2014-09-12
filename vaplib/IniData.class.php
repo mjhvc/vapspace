@@ -1,114 +1,104 @@
 <?php 
-
-/******************************************************************************
-*    vapspace est un logiciel libre : vous pouvez le redistribuer ou le       *
-*    modifier selon les termes de la GNU General Public Licence tels que      *
-*    publiés par la Free Software Foundation : à votre choix, soit la         *
-*    version 3 de la licence, soit une version ultérieure quelle qu'elle      *
-*    soit.
-*
-*    vapspace est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE  *
-*    GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou       *
-*    D'ADÉQUATION À UNE UTILISATION PARTICULIÈRE. Pour plus de détails,       *
-*    reportez-vous à la GNU General Public License.                           *
-*
-*    Vous devez avoir reçu une copie de la GNU General Public License         *
-*    avec vapspace. Si ce n'est pas le cas, consultez                         *
-*    <http://www.gnu.org/licenses/>                                           *
-******************************************************************************** 
-*/
-
+ 
 /**
-*  Class IniData,  
-*  1. charge un fichier contexte.ini pre-existant decrivant 
-*  - avec quelles tables MySQL le contexte interragit
-*  - quelles sont les donnees obligatoires et facultatives de ce contexte par statut 
-*  2. fournit un modele des donnees de ce contexte depuis les proprietes des attributs des tables liés au contexte
-*  3. crée un cache des tables statiquesToliaison et des tables passives demandées  
-*  4 recoupe les donnes traitees pour un classement par table et/ou par contexte  
-*  @package MODELE
-*  @copyright Marc Van Craesbeeck : marcvancraesbeck@scarlet.be
-*  @licence GPL
-*  @version 1.0.0
-*/
+* @class IniData() @extends UniConnect()
+*	@brief classe principale de la couche MODELE, initie la connexion à DB et charge le bon contexte.
+*	 
+*  -	charge un fichier ini situé dans vapdata/contextes/  décrivant le contexte soit : 
+*  		+	les interactions des tables sql du contexte entre elles 
+*  		+ les donnees obligatoires et facultatives de ce contexte
+*			+	les champs sql du contexte à visionner 
+*  -	fournit un tableau de ce contexte reprenant
+*			+ les propriétés sql des champs du contexte, enrichies 
+*			+	d'une regex associée
+*			+	d'un drapeau marqueur 'obligatoire-facultatif'
+*  -	met ce tableau en cache dans vapdata/nomContexte_data.ini 
+*  -	fourni quelques méthodes pour un classement des données par table, par obligation, etc
+*
+*	[vers les descripteurs de contexte] (@ref  descripteursContexte.dox) 
+*	@autor marcvancraesbeck@scarlet.be
+* @copyright [GNU Public License](@ref licence.dox)
+*/ 
+
+
 
 include_once('UniConnect.class.php');
 
 class IniData extends UniConnect
 {
-  /**
-  * Les attributs de la classe:   
+  /** Les attributs de la classe:   
   */
-  protected $arrayStatuts = array();      // tableau des statuts
-  protected $arrayContextes = array();    // tableau des contextes
-  protected $bd;                          // ressource Mysql
-  protected $clesDataContexte = array();  // tableau des clés SQL (FK, PK) du contexte
-  protected $contexte;                    // string le nom d'un contexte précis
-  protected $dataContexte = array();      // tableau des contextes 
-  protected $dataOblig = array();         // tableau des colonnes obligtoires
-  protected $dataFacul = array();         // tableau des colonnes facultatives                 
-  protected $dataVue = array();           // tableau des colonnes pour une VUE           
-  protected $dynTables = array();         // tableau des tables sql dynamiques selon contexte.ini
-  protected $dynPK = array();             // tableau des clés Primaires (PK)
-  protected $dynFK = '';                  // nom d'une clé étrangère (FK)
-  protected $dynFKP='';                   // nom d'une colonne référence pour FK
-  protected $fileTable = '';              // nom d'une table sql de contexte.ini 
-  protected $extraTable = array();        // tableau des tables 'extra' dans contexte.ini
-  protected $extraFK = array();           // tableau des clés FK 'extra'
-  protected $extraFKP = array();          // tableau des colonnes de références liés à extraFK 
-  protected $fileStatiqueTable = '';      // nom du fichier cache table.ini lié à une table sql 'statique'
-  protected $fileStatiqueData = '';       // nom du fichier cache 'table_stat.ini' avec les données 'statiques' de table
-  protected $filePassiveTable = '';       // nom du fichier cache table.ini lié à une table sql 'passive'
-  protected $filePassiveData = '';        // nom du fichier cache 'table_pass.ini' avec les données 'passives'  de table
-  protected $fileContexte = '';           // nom du fichier de configuration generale contexte.ini 
-  protected $fileDataContexte = '';       // nom du fichier cache table_data.ini avec les données calculées liées à un contexte 
-  protected $fileLiaisonTable = '';       // nom du fichier cache  'table.ini'  lié à une table sql 'de liaison' 
-  protected $haCont = '';                 // nom de l'antenne 'hors_antenne' 
-  protected $haReg = '';                  // nom de la region 'hors-region' 
-  protected $liaisonTable = '';           // nom d'une table sql de liaison
-  protected $liaisonFK = array();         // tableau des clés FK (clés de liaison) 
-  protected $liaisonFKP = array();        // tableau des colonnes vers lesquelles pointent les clés liaisonFK 
-  protected $liaisonChamps = array();     // tableau des colonnes supplémentaires sur table de liaison
-  protected $liaisonValeurs = '';         // valeur des colonnes supplémentaires sur table de liaison 
-  protected $liensCles = array();         // tableau qui contiend toutes les Foreign Key(FK)
-  protected $masques = array();           // tableau de gestion des masques regex
-  protected $mailCont = '';               // mail general de contact                   
-  protected $PPK = '';                    // nom de la cle Primaire Principale du contexte  
-  protected $passiveTable='';             // nom d'une table 'passive'
-  protected $passiveChamps = array();     // tableau de colonne liées à une table 'passive'
-  protected $passivePK='';                // nom de la cle PK de table 'passive'
-  protected $schema = array();            // tableau rassemblant le schema sql d'une table 
-  protected $schemaLiaison= array();      // tableau rassemblant le schema sql d'une table 'de liaison'
-  protected $schemaPassive=array();       // tableau rassemblant le schema sql d'une table 'passive'
-  protected $schemaStatique=array();      // tableau rassemblant le schema sql d'une table 'statique' 
-  protected $schemaDataStatique = array();// tableau de sortie de methode calculDataStatique($table,$tableau,$fichier)   
-  protected $schemaDataPassive=array();   // tableau de sortie de methode calculDataPassive($table,$fichier) 
-  protected $statut;                      // statut de fonctionnement du système 
-  protected $statiqueTable = '';          // nom d'une table déclaré 'statique'       
-  protected $statiqueChamps = '';         // nom d'une colonne sql 'statique' 
-  protected $statiquePK = '';             // string le nom de la cle PK d'une table sql statique                   
-  protected $statiqueValeurs = array();   // tableau de valeurs que peuvent prendre un champ sql 'statique' 
-  protected $table = '' ;                 // nom d'une table sql
+  protected $arrayStatuts = array();      /**< tableau des statuts */
+  protected $arrayContextes = array();    /**< tableau des contextes */
+  protected $bd;                          /**< ressource Mysql */
+  protected $clesDataContexte = array();  /**< tableau des clés SQL (FK, PK) du contexte */
+  protected $contexte;                    /**< string le nom d'un contexte précis */
+  protected $dataContexte = array();      /**< tableau des contextes  */
+  protected $dataOblig = array();         /**< tableau des colonnes obligtoires */
+  protected $dataFacul = array();         /**< tableau des colonnes facultatives */                
+  protected $dataVue = array();           /**< tableau des colonnes pour une VUE */          
+  protected $dynTables = array();         /**< tableau des tables sql dynamiques selon contexte.ini */
+  protected $dynPK = array();             /**< tableau des clés Primaires (PK) */
+  protected $dynFK = '';                  /**< nom d'une clé étrangère (FK) */
+  protected $dynFKP='';                   /**< nom d'une colonne référence pour FK */
+  protected $fileTable = '';              /**< nom d'une table sql de contexte.ini  */
+  protected $extraTable = array();        /**< tableau des tables 'extra' dans contexte.ini */
+  protected $extraFK = array();           /**< tableau des clés FK 'extra'*/
+  protected $extraFKP = array();          /**< tableau des colonnes de références liés à extraFK */
+  protected $fileStatiqueTable = '';      /**< nom du fichier cache table.ini lié à une table sql */ 'statique'
+  protected $fileStatiqueData = '';       /**< nom du fichier cache 'table_stat.ini' avec les données 'statiques' de table */
+  protected $filePassiveTable = '';       /**< nom du fichier cache table.ini lié à une table sql 'passive' */
+  protected $filePassiveData = '';        /**< nom du fichier cache 'table_pass.ini' avec les données 'passives'  de table */
+  protected $fileContexte = '';           /**< nom du fichier ini de configuration du contexte */ 
+  protected $fileDataContexte = '';       /**< nom du fichier cache table_data.ini avec les données calculées liées à un contexte */
+  protected $fileLiaisonTable = '';       /**< nom du fichier cache  'table.ini'  lié à une table sql 'de liaison' */
+  protected $haCont = '';                 /**< nom de l'antenne 'hors_antenne' */
+  protected $haReg = '';                  /**< nom de la region 'hors-region' */
+  protected $liaisonTable = '';           /**< nom d'une table sql de liaison */
+  protected $liaisonFK = array();         /**< tableau des clés FK (clés de liaison) */ 
+  protected $liaisonFKP = array();        /**< tableau des colonnes vers lesquelles pointent les clés  liaisonFK  */
+  protected $liaisonChamps = array();     /**< tableau des colonnes supplémentaires sur table de liaison */
+  protected $liaisonValeurs = '';         /**< valeur des colonnes supplémentaires sur table de liaison */
+  protected $liensCles = array();         /**< tableau qui contiend toutes les Foreign Key(FK) */
+  protected $masques = array();           /**< tableau de gestion des masques regex */
+  protected $mailCont = '';               /**< mail general de contact  */                 
+  protected $PPK = '';                    /**< nom de la cle Primaire Principale du contexte */  
+  protected $passiveTable='';             /**< nom d'une table 'passive' */
+  protected $passiveChamps = array();     /**< tableau de colonne liées à une table 'passive' */
+  protected $passivePK='';                /**< nom de la cle PK de table 'passive' */
+  protected $schema = array();            /**< tableau rassemblant le schema sql d'une table */
+  protected $schemaLiaison= array();      /**< tableau rassemblant le schema sql d'une table 'de liaison' */
+  protected $schemaPassive=array();       /**< tableau rassemblant le schema sql d'une table 'passive' */
+  protected $schemaStatique=array();      /**< tableau rassemblant le schema sql d'une table 'statique'*/ 
+  protected $schemaDataStatique = array();/**< tableau de sortie de methode calculDataStatique($table,$tableau,$fichier)  */ 
+  protected $schemaDataPassive=array();   /**< tableau de sortie de methode calculDataPassive($table,$fichier) */
+  protected $statut;                      /**< statut de fonctionnement du système */
+  protected $statiqueTable = '';          /**< nom d'une table déclaré 'statique'    */   
+  protected $statiqueChamps = '';         /**< nom d'une colonne sql 'statique' */
+  protected $statiquePK = '';             /**< string le nom de la cle PK d'une table sql */ statique                   
+  protected $statiqueValeurs = array();   /**< tableau de valeurs que peuvent prendre un champ sql */ 'statique' 
+  protected $table = '' ;                 /**< nom d'une table sql */
    
-  /**
-  *  Constructeur de la classe:
-  *  initialise une instance PDO () meme sans contexte ni statut fourni.
-  *  @param : $contexte, string, le nom du contexte
-  *  @param : $statut, string nom du statut
-  *  Ces deux parametres sont facultatifs maintenant et pourront etre surcharges dans les classes filles.
+  /** Constructeur : initialise le nom du statut (facultatif), le nom du contexte(facultatif) et une instance PDO.
+	*
+ 	*  @param string contexte le nom du contexte
+	*  @param string statut le nom du statut
+	*	 @return le tableau du contexte, sinon vide.
   */  
   function  __construct($contexte=NULL,$statut=NULL)
   {	  
     $this->contexte = $contexte;
     $this->statut = $statut; 
       
-    //Les 4 statuts du système
+    /** Les 4 statuts du système */
     $this->arrayStatuts = array('anonym','membre','responsable','admin');
     
-    //Le nom de tous les contextes 
+    /** Le nom de tous les contextes 
+		*	\ref Membre.ini Vers la description des fichiers de contexte.	
+		*/ 
     $this->arrayContextes = array('Membre','Antenne','Region','Chat','Sponsor','News','File','Auth','Index','Help','Test','Passage','Trajet','Install');     
      
-    //Appel statique de la class UniConnect qui est un singleton 
+    /** Appel statique de la class UniConnect */ 
     if (!file_exists(DIRLIB.'dsn.php')) { $this->bd = NULL; }
     else { $this->bd = UniConnect::getInstance(); }
      

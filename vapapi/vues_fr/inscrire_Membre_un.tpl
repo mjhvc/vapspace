@@ -2,6 +2,7 @@
   <p class="identifier">{intro}</p>
   <p class="identifier">Les champs qui commencent par * sont obligatoires.</p>
   <fieldset><legend>Page Un: les données personnelles </legend>
+    <p class="perso"><label for="genre"><strong>{genre_o} Civilité : </strong></label> {civil} </p>
     <p class="perso"><label for="nom"><strong>{nom_o} Nom :</strong></label><input type="text" name="nom" id="nom" size="{nom_s}" maxlength="{nom_s}" value="{nom}" /></p> 
     <p class="perso"><label for="prenom"><strong>{prenom_o} Prénom :</strong></label><input type="text" name="prenom" id="prenom" size="{prenom_s}" maxlength="{prenom_s}" value="{prenom}" /></p>
     <p class="perso"><label for="mail"><strong>{mail_o} Courriel :</strong></label><input type="text" name="mail" id="mail" size="{mail_s}" maxlength="{mail_s}" value="{mail}" /></p>       

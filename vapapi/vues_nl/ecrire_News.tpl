@@ -28,7 +28,8 @@
     <!-- END antennes --> 
     <tr><td><input type="checkbox" name="toresp" value="respAnt" {respAnt}{respAnt_val} id="toresp" /><label for="toresp">Alle Antenne verantwoordelijken</label></td></tr> 
   </table>
-  <p><input type = "submit" value="News controleren" /> 
+  <p><input type = "submit" value="News controleren" />
+	<p><input type = "submit" name="fileNews" value="Mailing van Members download" /> </p>  
 </form>
 </fieldset>
 

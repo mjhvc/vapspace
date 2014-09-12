@@ -38,6 +38,7 @@ abstract class ABS_Membre extends Controleur
 { 
   protected $action;  
   protected $allAntennes = array();
+  protected $allRegions = array();
   public $champPassif;  
   protected $cleha;
   protected $nomha;
@@ -62,6 +63,7 @@ abstract class ABS_Membre extends Controleur
   protected $valppk;
   protected $ppk;
   protected $chat;
+  protected $civilite = array();
 /**
 * methode fille __construct()  
 * necessaire pour initier en premier lieu le nom du contexte = nom du controleur
@@ -80,13 +82,15 @@ abstract class ABS_Membre extends Controleur
     $this->idxPassif = 1;     
     $this->liaisonTable = $this->modele->getLiaisonTable(); //si choix sponsor, ceci peut valoir null
     $this->tabTables = $this->modele->getTables();
-    $this->tabRegions = $this->valeursPassive(2,NULL,'Antenne');
+    $this->tabRegions = $this->allRegions = $this->valeursPassive(2,NULL,'Antenne');
+    $this->allRegions[0] = MBR_GLB_GLB;
     $this->allAntennes = $this->valeursPassive($this->idxPassif);    
     $this->tabCheck = array('inscrit'=>array('pieton','auto','deux'),'securite'=>'oui','fiche'=>'oui','news'=>'oui','lang'=>array('fr','nl'));      
     $this->tableUn = $this->tabTables[0];
     $this->tableDeux = $this->tabTables[1];
     $this->champPassif = 'lienant';         
     $this->phase = '';
+    $this->civilite = array("F"=>MBR_FEMI,"M"=>MBR_MASC);
     // les formulaires de 'multi_Membre_recom.tpl' 
     $this->promoMail = array('promoUn','promoDeux','promoTrois');
     $this->promoText = array('promoMsg');         
@@ -104,6 +108,7 @@ abstract class ABS_Membre extends Controleur
   abstract public function editer();
   abstract public function update();
   abstract public function index();
+  abstract public function stats();
   abstract public function output($data);
 /**
   * Des entités de la vue (squelette.tpl et pied.tpl) uniques au contexte
@@ -521,7 +526,7 @@ abstract class ABS_Membre extends Controleur
         $getAntFrom = filter_input(INPUT_POST,'antFrom',FILTER_VALIDATE_INT); 
         if (array_key_exists($getAntFrom,$this->allAntennes) && ($getAntTo = filter_input(INPUT_POST,'antTo',FILTER_VALIDATE_INT))) {     
           $regTo =  $this->modele->ligneParValeurs(array('lienreg'),T_ANT,'idant',$getAntTo);     
-          $sqlUn = "UPDATE spip_vap_core SET lienant = :to "
+          $sqlUn = "UPDATE ".T_CORE." SET lienant = :to "
                 . " WHERE lienant = :from ";
           $sqlDeux = "UPDATE ".T_HUM." SET lienreg = :newreg "
                 . " WHERE ".T_HUM.".idhum IN "
@@ -768,6 +773,16 @@ abstract class ABS_Membre extends Controleur
       $e->alerte($msg);  
     }    
   }
+/**
+* Petite methode de calcul de pourcentage
+*/
+  protected function pourcentage($numera,$denomi)
+  {
+    $pourcent = ($numera/$denomi) * 100;
+    $arrondi = round($pourcent,2);
+    return $arrondi ;
+  }
+ 
 /**
 * methode supprimer() appel $this-modele->supprimeUneLigne($cle,$table) qui supprime une ligne du contexte
 * necessite la variable $_GET['line']

@@ -776,18 +776,21 @@ class Controleur
   public function statutConnect($token=NULL)
   {
     if ($this->validSess($token)) { 
+      if ($this->droits & RESPONSABLE) { $ch_resp = '<li class="menuPerso"><a href="'.BASEURL.'index.php?token='.$token.'">'.MBR_ADMIN.'</a></li>'; }
+      else { $ch_resp = ''; }
       $urlOut = BASEURL."index.php?ctrl=auth&amp;action=logout";
       $urlProfil = BASEURL."index.php?ctrl=membre&amp;action=editer&amp;line=".$_SESSION['idhum']."&amp;token=".$token ;
       $chaine = '<ul class="connect"><li><a href="#" id="Perso">'.$_SESSION['prenom']." ".$_SESSION['nom'].' <img src="photos/down2.gif" alt="down" /></a></li>'
                 .'<li class="menuPerso"><a href="'.$urlProfil.'">'.CONNECT_PROFIL.'</a></li>'
-                .'<li class="menuPerso">'.CONNECT_NUMBER.$_SESSION['membre']. '</li>'       
-                .'<li class="menuPerso"><a href="'.$urlOut.'">'.CONNECT_LOGOUT.'</a></li></ul>';
+                .'<li class="menuPerso">'.CONNECT_NUMBER.$_SESSION['membre']. '</li>';
+      $ch_fin = '<li class="menuPerso"><a href="'.$urlOut.'">'.CONNECT_LOGOUT.'</a></li></ul>';
+      $chaine_finale = $chaine.$ch_resp.$ch_fin;
     }
     else {
-      $chaine = "<p class=\"connect\">".CONNECT_WELKOM." <br />"
+      $chaine_finale = "<p class=\"connect\">".CONNECT_WELKOM." <br />"
       .'<a href="http://'.$_SERVER["SERVER_NAME"].'">'.BACK2SITE.'</a></p>';
     }
-    return $chaine;
+    return $chaine_finale;
   }
   /**  
   * function qui gère l'envoi du mail par appel de la classe phpmailer
@@ -916,6 +919,30 @@ class Controleur
     }      
   }
   /**
+  * Recopié du livre 'PHP5 avancé, ch gestion des caches, ¢Daspet & De Geyer, ed Eyrolles
+  * détermine si oui ou non (bool) il faut utiliser le cache
+  * @param $path : string, un chemin de fichier cache
+  * @param $delais :int le delais en secondes de validité du fichier cache
+  * retourne un booleen
+  */   
+  protected function useCache($path,$delais,$calc=NULL)
+  {
+    //a priori on utilise le cache
+    $use_cache = true;
+    //calculer le stamp du fichier cache, son delais depuis maintenant, et comparer avec delais fourni
+    if (file_exists($path)) {
+      $t = filemtime($path);
+      $ledelais = (time() - $t);
+      if (($ledelais < $delais) AND ($ledelais >= 0)){ $use_cache =true; }
+    }
+    else { $use_cache = false; }
+    //Faut-il forcer un recalcul ?
+    if ($calc) { $use_cache =false; }
+    else { $use_cache = true; }
+    return $use_cache;
+  }
+
+  /**
   * function ecrisCache : ecris $ligne dans le fichier $iDir.$masq
   * @param $ligne: string une chaine à ecrire
   * @param $iDir: int, identifie le numero de repertoire de cache dans DIRCACHANT
@@ -980,5 +1007,24 @@ class Controleur
 		  fclose($vp);
     }
     return $tab_2D;
+  }
+	/**
+  * factorisation de l'action download
+  */
+  protected function downLoad($file,$pathFull)
+  {
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header("Content-disposition: attachment; filename=$file");            
+    header('Content-Transfer-Encoding: binary');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize($pathFull));
+    if (ob_get_length() > 0) { ob_clean(); }
+    flush();
+    readfile($pathFull);
+    if ($final = @readfile($pathFull)) { return true; }
+    else { return false; }
   }
 }

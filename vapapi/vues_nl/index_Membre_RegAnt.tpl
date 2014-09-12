@@ -17,6 +17,12 @@
       <p id="charge"><img src="photos/chargeur.gif" alt=' ' /></p>
     <h3 class="space">Over VAP</h3>
     <p><a href="{urlIter}">Documentatie</a></p> 
+    <p id="statistiques"><a href="#statistiques" class="statreg">Chijfers per gebied</a></p>    
+    <ul class="sreg">
+      <!-- BEGIN STATISTIQUES --> 
+        <li class="slireg"><a href="{urlRegStats}">{nomreg}</a></li>
+       <!-- END STATISTIQUES -->
+    </ul>       
     <p><a href="{urlDelMbr}" onclick="return confirm(' Ik bevestig mijn uitschrijven uit het VAP-netwerk ');">Ik wil me uitschrijven uit VAP</a></p> 
   </div>
   <div id="bibIter">

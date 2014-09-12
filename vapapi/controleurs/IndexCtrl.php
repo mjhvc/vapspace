@@ -152,6 +152,8 @@ class IndexCtrl extends Controleur
       
       //Creer les menus      
       if($this->droits & RESPONSABLE) {
+        $this->allRegions = $this->valeursPassive(2,NULL,'Antenne');
+        $this->allRegions[0] = "Globales";
         $urlInscrireMbr = BASEURL."index.php?ctrl=membre&amp;action=inscrire";
         $urlInscrireMbrSans = BASEURL."index.php?ctrl=membre&amp;action=inscrire&amp;membre=sans";
         $urlGererMbr = BASEURL."index.php?ctrl=membre&amp;action=gerer&amp;token=".$token;
@@ -159,7 +161,8 @@ class IndexCtrl extends Controleur
         $urlInscrireLieu = BASEURL."index.php?ctrl=pass&amp;action=inscrire&amp;token=".$token;
         $urlContNews = BASEURL.'index.php?ctrl=news&amp;action=ecrire&amp;token='.$token;        
         $urlGererNews = BASEURL."index.php?ctrl=news&amp;action=fetchNews&amp;token=".$token;
-       
+        $urlMbrStats = BASEURL."index.php?ctrl=membre&amp;action=stats&amp;recalcul=oui&amp;token=".$token;       
+
         $menuInscrire[] = array('url'=>$urlInscrireMbr,'act'=>ENT_MBR,'aut'=>RESPONSABLE);
         $menuInscrire[] = array('url'=>$urlInscrireMbrSans,'act'=>ENT_MBR_WITHOUT,'aut'=>RESPONSABLE);
         $menuInscrire[] = array('url'=>$urlInscrireLieu,'act'=>ENT_LOC,'aut'=>RESPONSABLE);
@@ -169,6 +172,9 @@ class IndexCtrl extends Controleur
         $menuGerer[] = array('url'=>$urlGererNews,'act'=>ENT_NEWS_STANDBY,'aut'=>RESPONSABLE); 
         $this->vue->teleFile = ''; 
         $this->vue->selectAntenne = $this->calculChampPassif('antenne',$_SESSION['nomantenne']);
+        $this->vue->selectRegions = $this->getSelect('regstat',$this->allRegions);
+        $this->vue->gerer_stat = $urlMbrStats;      
+        $this->vue->stat_region = ENT_STATS_REG;
       }
       if($this->droits & ADMIN) {
         $this->allAntennes = $this->valeursPassive(1);
@@ -180,6 +186,7 @@ class IndexCtrl extends Controleur
         $urlContReg = BASEURL.'index.php?ctrl=region&amp;action=voir&amp;token='.$token;
         $urlContTrans = BASEURL.'index.php?ctrl=sponsor&amp;action=voir&amp;token='.$token;
         $urlChatMens = BASEURL."index.php?ctrl=chat&amp;action=voirMens&amp;token=".$token;
+        
        
         $menuInscrire[] = array('url'=>$urlInscrireAnt,'act'=>ENT_ANT,'aut'=>ADMIN);
         $menuInscrire[] = array('url'=>$urlInscrireReg,'act'=>ENT_REGIO,'aut'=>ADMIN);
@@ -191,6 +198,7 @@ class IndexCtrl extends Controleur
         $this->vue->setFile("teleFile",'index_File.tpl') ;
         $this->vue->url_file = BASEURL."index.php?ctrl=file&amp;token=".$token; 
         $this->vue->selectAntenne = $this->getSelect('antenne',$this->allAntennes);
+        
         $this->vue->url_ctxt = BASEURL.'index.php?ctrl=index&amp;reset=on&amp;token='.$token;
         $this->vue->ctxt = ENT_CTXT;
         $this->vue->url_cachAnt = BASEURL.'index.php?ctrl=antenne&amp;action=resetCache&amp;token='.$token;
@@ -198,6 +206,8 @@ class IndexCtrl extends Controleur
         $statis = $this->staTraj(); //appel de methode privée de statistique trajet
         $this->vue->nbr_traj = $statis["cpTraj"];
         $this->vue->traj_exch = $statis["cptExch"];
+        
+       
       }      
       $this->vue->gerer_lieu =  BASEURL."index.php?ctrl=pass&amp;action=voir&amp;token=".$token;
       $this->vue->iter_meet_ant = ITER_MEET; $this->vue->iter_meet = MBR_ADMIN;

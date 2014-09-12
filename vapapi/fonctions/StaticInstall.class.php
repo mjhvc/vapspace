@@ -158,7 +158,7 @@ class StaticInstall
       $val_Li = 'oui';
       $val_Stat = 'oui,ouiavec';
       $champs_Pass = 'idant,nomantenne,lienreg';
-      $oblig_mbr = 'mail,nom,prenom,adresse,code,ville,inscrit,passe,lienant,lienreg,securite'; 
+      $oblig_mbr = 'mail,genre,nom,prenom,adresse,code,ville,inscrit,passe,lienant,lienreg,securite'; 
       $oblig_ano = $oblig_mbr.',spam';
       $oblig_resp = $oblig_adm = $oblig_mbr.',membre';
       $facul_ano = $facul_mbr = 'pays,tel,naissance,news,fiche,connu,statut,plaque';
@@ -351,6 +351,7 @@ class StaticInstall
     $sqlHumain = " CREATE TABLE IF NOT EXISTS ".$pre."human ( "
                  ." idhum int(11) NOT NULL auto_increment, "
                  ." lienreg int(9) NOT NULL default '0', "
+                 ." genre char(1) NOT NULL default 'M', "
                  ." nom varchar(30) NOT NULL, "
                  ." prenom varchar(30) NOT NULL, "
                  ." adresse varchar(60) NOT NULL, "

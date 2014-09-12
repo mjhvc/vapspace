@@ -2,6 +2,7 @@ $(document).ready(function(){
   $("li.menuPerso").hide();
   $("li.liReg").hide();
   $("li.liChat").hide();
+  $("li.slireg").hide();
   $("#Perso").click(function(){
     if ($("li.menuPerso").is(":hidden")){ $("ul.connect").children("li.menuPerso").slideDown('slow'); }
     else { $("ul.connect").children("li.menuPerso").slideUp('slow'); }
@@ -9,6 +10,10 @@ $(document).ready(function(){
   $("a.aChat").click(function(){
     if ($("li.liChat").is(":hidden")){ $(".navChat").children(".liChat").slideDown('slow'); }
     else { $(".navChat").children(".liChat").slideUp('slow'); }
+  }); 
+  $("a.statreg").click(function(){
+    if ($("li.slireg").is(":hidden")){ $(".sreg").children(".slireg").slideDown('slow'); }
+    else { $(".sreg").children(".slireg").slideUp('slow'); }
   });    
   $("a.aReg").click(function(){
     if ($(this).next("ul.navReg").children("li.liReg").is(":hidden")){ 

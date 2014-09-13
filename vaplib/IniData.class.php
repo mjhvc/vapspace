@@ -1,39 +1,36 @@
 <?php 
  
 /**
-* @class IniData() @extends UniConnect()
-*	@brief classe principale de la couche MODELE, initie la connexion à DB et charge le bon contexte.
-*	 
-*  -	charge un fichier ini situé dans vapdata/contextes/  décrivant le contexte soit : 
-*  		+	les interactions des tables sql du contexte entre elles 
-*  		+ les donnees obligatoires et facultatives de ce contexte
-*			+	les champs sql du contexte à visionner 
-*  -	fournit un tableau de ce contexte reprenant
-*			+ les propriétés sql des champs du contexte, enrichies 
-*			+	d'une regex associée
-*			+	d'un drapeau marqueur 'obligatoire-facultatif'
-*  -	met ce tableau en cache dans vapdata/nomContexte_data.ini 
-*  -	fourni quelques méthodes pour un classement des données par table, par obligation, etc
-*
-*	[vers les descripteurs de contexte] (@ref  descripteursContexte.dox) 
-*	@autor marcvancraesbeck@scarlet.be
-* @copyright [GNU Public License](@ref licence.dox)
+@class IniData() 
+@brief initier la connexion à DB et charger le bon contexte.
+	 
+  -	charge un fichier ini situé dans vapdata/contextes/  décrivant le contexte soit : 
+  		+	les interactions des tables sql du contexte entre elles 
+  		+ les donnees obligatoires et facultatives de ce contexte
+			+	les champs sql du contexte à visionner 
+  -	fournit un tableau de ce contexte reprenant
+			+ les propriétés sql des champs du contexte, enrichies 
+			+	d'une regex associée
+			+	d'un drapeau marqueur 'obligatoire-facultatif'
+  -	met ce tableau en cache dans vapdata/nomContexte_data.ini 
+  -	fourni quelques méthodes pour un classement des données par table, par obligation, etc
+
+[vers le descripteur des contextes] (@ref  descripteursContexte.dox) 
+@author marcvancraesbeck@scarlet.be
+@copyright [GNU Public License](@ref licence.dox)
 */ 
-
-
 
 include_once('UniConnect.class.php');
 
 class IniData extends UniConnect
 {
-  /** Les attributs de la classe:   
-  */
+  // Les attributs de la classe:   
   protected $arrayStatuts = array();      /**< tableau des statuts */
   protected $arrayContextes = array();    /**< tableau des contextes */
   protected $bd;                          /**< ressource Mysql */
   protected $clesDataContexte = array();  /**< tableau des clés SQL (FK, PK) du contexte */
   protected $contexte;                    /**< string le nom d'un contexte précis */
-  protected $dataContexte = array();      /**< tableau des contextes  */
+  protected $dataContexte = array();      /**< tableau fourni par methode chargerContexte  */
   protected $dataOblig = array();         /**< tableau des colonnes obligtoires */
   protected $dataFacul = array();         /**< tableau des colonnes facultatives */                
   protected $dataVue = array();           /**< tableau des colonnes pour une VUE */          
@@ -45,74 +42,76 @@ class IniData extends UniConnect
   protected $extraTable = array();        /**< tableau des tables 'extra' dans contexte.ini */
   protected $extraFK = array();           /**< tableau des clés FK 'extra'*/
   protected $extraFKP = array();          /**< tableau des colonnes de références liés à extraFK */
-  protected $fileStatiqueTable = '';      /**< nom du fichier cache table.ini lié à une table sql */ 'statique'
-  protected $fileStatiqueData = '';       /**< nom du fichier cache 'table_stat.ini' avec les données 'statiques' de table */
-  protected $filePassiveTable = '';       /**< nom du fichier cache table.ini lié à une table sql 'passive' */
-  protected $filePassiveData = '';        /**< nom du fichier cache 'table_pass.ini' avec les données 'passives'  de table */
-  protected $fileContexte = '';           /**< nom du fichier ini de configuration du contexte */ 
-  protected $fileDataContexte = '';       /**< nom du fichier cache table_data.ini avec les données calculées liées à un contexte */
-  protected $fileLiaisonTable = '';       /**< nom du fichier cache  'table.ini'  lié à une table sql 'de liaison' */
+  protected $fileStatiqueTable = '';      /**< fichier cache.ini lié à une table sql statique */
+  protected $fileStatiqueData = '';       /**< fichier cache.ini avec les données statiques de table */
+  protected $filePassiveTable = '';       /**< fichier cache.ini lié à une table sql 'passive' */
+  protected $filePassiveData = '';        /**< fichier cache.ini avec les données 'passives'  de table */
+  protected $fileContexte = '';           /**< fichier.ini de configuration du contexte */ 
+  protected $fileDataContexte = '';       /**< fichier cache.ini avec données calculées d'un contexte */
+  protected $fileLiaisonTable = '';       /**< fichier cache.ini  lié à une table sql 'de liaison' */
   protected $haCont = '';                 /**< nom de l'antenne 'hors_antenne' */
   protected $haReg = '';                  /**< nom de la region 'hors-region' */
   protected $liaisonTable = '';           /**< nom d'une table sql de liaison */
   protected $liaisonFK = array();         /**< tableau des clés FK (clés de liaison) */ 
-  protected $liaisonFKP = array();        /**< tableau des colonnes vers lesquelles pointent les clés  liaisonFK  */
-  protected $liaisonChamps = array();     /**< tableau des colonnes supplémentaires sur table de liaison */
+  protected $liaisonFKP = array();        /**< tableau :colonnes pointées par les clés  liaisonFK  */
+  protected $liaisonChamps = array();     /**< tableau :colonnes supplémentaires sur table de liaison */
   protected $liaisonValeurs = '';         /**< valeur des colonnes supplémentaires sur table de liaison */
-  protected $liensCles = array();         /**< tableau qui contiend toutes les Foreign Key(FK) */
+  protected $liensCles = array();         /**< tableau avec toutes les Foreign Key(FK) du contexte*/
   protected $masques = array();           /**< tableau de gestion des masques regex */
   protected $mailCont = '';               /**< mail general de contact  */                 
   protected $PPK = '';                    /**< nom de la cle Primaire Principale du contexte */  
   protected $passiveTable='';             /**< nom d'une table 'passive' */
   protected $passiveChamps = array();     /**< tableau de colonne liées à une table 'passive' */
   protected $passivePK='';                /**< nom de la cle PK de table 'passive' */
-  protected $schema = array();            /**< tableau rassemblant le schema sql d'une table */
-  protected $schemaLiaison= array();      /**< tableau rassemblant le schema sql d'une table 'de liaison' */
+  protected $schema = array();            /**< tableau rassemblant le schema d'une table */
+  protected $schemaLiaison= array();      /**< tableau rassemblant le schema d'une table 'de liaison' */
   protected $schemaPassive=array();       /**< tableau rassemblant le schema sql d'une table 'passive' */
   protected $schemaStatique=array();      /**< tableau rassemblant le schema sql d'une table 'statique'*/ 
-  protected $schemaDataStatique = array();/**< tableau de sortie de methode calculDataStatique($table,$tableau,$fichier)  */ 
-  protected $schemaDataPassive=array();   /**< tableau de sortie de methode calculDataPassive($table,$fichier) */
+  protected $schemaDataStatique = array();/**< tableau resultat de calculDataStatique()  */ 
+  protected $schemaDataPassive=array();   /**< tableau résultat de calculDataPassive() */
   protected $statut;                      /**< statut de fonctionnement du système */
   protected $statiqueTable = '';          /**< nom d'une table déclaré 'statique'    */   
   protected $statiqueChamps = '';         /**< nom d'une colonne sql 'statique' */
-  protected $statiquePK = '';             /**< string le nom de la cle PK d'une table sql */ statique                   
-  protected $statiqueValeurs = array();   /**< tableau de valeurs que peuvent prendre un champ sql */ 'statique' 
+  protected $statiquePK = '';             /**< string : cle PK d'une table statique */                  
+  protected $statiqueValeurs = array();   /**< valeurs que peuvent prendre un champ sql 'statique' */
   protected $table = '' ;                 /**< nom d'une table sql */
    
-  /** Constructeur : initialise le nom du statut (facultatif), le nom du contexte(facultatif) et une instance PDO.
-	*
- 	*  @param string contexte le nom du contexte
-	*  @param string statut le nom du statut
-	*	 @return le tableau du contexte, sinon vide.
-  */  
+/** Constructeur : initialise le nom du statut (facultatif), le nom du contexte(facultatif) et une instance PDO.
+  
+	  $this->arrayStatuts <- les 4 statuts du système  
+		$this->arrayContextes <- le nom de tous les contextes 
+	  Si dsn.php alors $this->bd  initie une connexion PDO via (@ref getInstance())
+	  Si ($contexte et $statut) alors chargement de $this->dataContexte (@ref chargerContexte($contexte,$statut)) 
+	
+ 	  @param $contexte  string, le nom du contexte
+	  @param $statut  string, le nom du statut
+*/  
   function  __construct($contexte=NULL,$statut=NULL)
   {	  
     $this->contexte = $contexte;
     $this->statut = $statut; 
-      
-    /** Les 4 statuts du système */
     $this->arrayStatuts = array('anonym','membre','responsable','admin');
+    $this->arrayContextes = array('Membre','Antenne','Region','Chat','Sponsor','News','File','Auth','Index','Help','Test','Passage','Trajet','Install'); 
     
-    /** Le nom de tous les contextes 
-		*	\ref Membre.ini Vers la description des fichiers de contexte.	
-		*/ 
-    $this->arrayContextes = array('Membre','Antenne','Region','Chat','Sponsor','News','File','Auth','Index','Help','Test','Passage','Trajet','Install');     
-     
-    /** Appel statique de la class UniConnect */ 
-    if (!file_exists(DIRLIB.'dsn.php')) { $this->bd = NULL; }
-    else { $this->bd = UniConnect::getInstance(); }
-     
+		// C'est l'installateur TODOREF qui initie le fichier dsn.php
+		if (!file_exists(DIRLIB.'dsn.php')) { 
+			$this->bd = NULL; 
+		}
+    else { 
+			$this->bd = UniConnect::getInstance(); 
+		}     
+		// Chargement du contexte si les paramètres sont fournis
     if ($contexte !== NULL && $statut !== NULL) {
-      $this->dataContexte = $this->chargerContexte($this->contexte,$this->statut); 
-    }
+			$this->dataContexte = $this->chargerContexte($this>contexte,$this->statut);
+		}
   }
-   /********************************************************************
-  * Methodes private : reservées à cette class,appelées par cette class
-  *
-  * function chargermasques()
-  *  Chargement d'un tableau de masques regex pour chaque table MySQL
-  *  Les cles des array sont les attributs (colonnes) de la table MySQL
-  *  @param: $table, string, le nom de la table MySQL a charger
+   
+/** 
+		@brief Chargement d'un tableau de regex pour chaque colonnes de la table sql fournie.
+	  @param $table string, nom de la table MySQL a charger.
+		@return array('nomColonne'=>'valeuRegex')
+	  recquis : @ref libRgx.php le fichier des regex.\n
+	  recquis  : @ref sqlini.dox réparti la regex ad hoc selon la colonne.\n 
   */
   private function chargerMasques($table)
   {    
@@ -141,14 +140,21 @@ class IniData extends UniConnect
     }
     return $masques; 
   }   
-  /**
-  * showColumns() 
-  * @param : $nom_table, string, le nom d'une table a charger
-  * retourne un fichier .ini par table basé sur la requete:"SHOW COLUMNS FROM $nom_table"
-  * detection des FK grace à $this->liensCles 
-  * chaque attribut(colonne) de la table est un array avec (son type, sa clePrimaire(PK), sa longueur, sa valeur default)
-  * rajoute en sus : masque=1, oblig=0 et possible=0 pour attribution ultérieures
-  */  
+
+/** Enregistrer les caractéristiques sql d'une table.
+   
+   Retourne un tableau et un cache.ini par table basé sur la requete:"SHOW COLUMNS FROM $nom_table".\n 
+	 Détection des FK grace à $this->liensCles \n
+   Chaque attribut(colonne) de la table est un array avec 
+		- le typage sql, 
+		- la clePrimaire(PK), 
+		- la longueur, 
+		- sa valeur default 
+   	- rajoute en sus masque=1,oblig=0, possible=0 pour attributions ultérieures.
+	 
+	 @param $nom_table string, le nom d'une table a charger
+	 @return array     
+*/  
   private function showColumns($nom_table)
   {  
     $ini = $tab = $inischema = array();   
@@ -191,7 +197,7 @@ class IniData extends UniConnect
             }
           }  
         }
-        $ini[$x]='cleSecondaire='.$drapFK; $x++;                 
+        $ini[$x] = 'cleSecondaire='.$drapFK; $x++;                 
         if ($drapFK) { $ini[$x] = 'cleSecondaireRelie='.$fkdyn; $x++; } 
       
         //attribution de Default: 
@@ -211,14 +217,16 @@ class IniData extends UniConnect
     $stmt = NULL;$tab = array();$ini = array();
     return $iniSchema;
   }
-  /**
-  * calculDataStatique : methode qui cree et charge en memoire un fichier ini 
-  * @param : $table: string: nom d'une table
-  * @param : $tableau : array() le resulat de schemaTable() pour la table 'statique' 
-  * @param : $fichier : string l'adresse ($path) du fichier a créer
-  * se base sur une requete en table statique qui selectionne les valeurs des champs statiques
-  * pour chaque ligne de champ statique, fourni les valeurs en rapport pour les donnees de liaison
-  */
+
+	/** Crée un fichier.ini par une requète sélect des valeurs des champs statiques. 
+
+  Relie chaque ligne dans contexte:statique:valeurs, avec contexte:liaison:champs voir : [fichier de contexte Membre] (@ref  membre.dox)  
+	
+  @param $tableau  array le resulat de schemaTable pour la table statique 
+  @param $fichier  string l'adresse ($path) du fichier a créer
+	@param $table  string nom d'une table	
+	@return array()
+	*/
   private function calculDataStatique($table,$tableau,$fichier)
   {  
     $ini = $inischema = $sortie = array(); 
@@ -227,37 +235,34 @@ class IniData extends UniConnect
     $titre = $this->statiqueChamps; 
     $cleLigne = $this->statiquePK;
     
-    //relation(facultative) entre des valeurs de 'liaison' et des valeurs statiques   
+    //si nécessaire, sérialiser [statique][valeurs] et [liaison][champ]  
     if (!empty($this->liaisonValeurs)){ $name = implode(",",$this->statiqueValeurs);}
     else { $name = NULL;}  
     if(!empty($this->liaisonChamps)){ $name2tab = implode(",",$this->liaisonChamps);} 
     else {  $name2tab = NULL;}      
     
     // requete sql et calculs 
-    // boucle while : toutes les lignes de la table statique 
     $sql = "SELECT  $colonnes  FROM  $table ";
     $stmt = $this->bd->query($sql);
     while ($rslt = $stmt->fetch(PDO::FETCH_OBJ)){ 
       //la valeur du titre est la valeur du nom de la colonne statique
       $valTitre = $rslt->$titre;      
-
-      //detection apostrophe
-      if ($posApos = strpos($valTitre,"&")){
-          $valTitre = htmlspecialchars_decode($valTitre,ENT_QUOTES);          
-          $valTitre = str_replace("'",'"\'"',$valTitre);
-      }  
-   
-      //creation du fichier ini: les donnees qui relient la valeur statique aux valeurs de liaison  
-      //ligne 269: le chiffre magique 1 defini la cle FK qui pointe vers la PK statique 
+			$valTitre = $this->aposentite($valTitre); 
+      //creation du fichierData.ini: relier les donnees de [statique][valeurs] aux valeurs de liaison  
+      //ligne 266: le chiffre magique 1 defini la cle FK qui pointe vers la PK statique 
+			//TODO remplacer ce chiffre magique par des champs FKDYN et FKSTAT
+			//Ceci serait une solution générale plus rationelle à l'astuce de correspondance horizontale ...
       $ini[$x] = "[".$valTitre."]" ; $x++;       
       $ini[$x] = "data=statique";$x++;
       $ini[$x] = "tableLiaison=".$this->liaisonTable;$x++;
       $ini[$x] = "cleLiaison=".$this->liaisonFK[1];$x++;    
       $ini[$x] = "valCleLiaison=".$rslt->$cleLigne;$x++;
+			// Si il y a une chaine issue de [statique][valeurs], établir la colonne [liaison][champ]ad hoc
       if (!empty($name)){
         $ini[$x] = "valeurs=".$name;$x++;
         $ini[$x] = "champsLienValeur=".$name2tab;$x++;
-      }         
+      } 
+			//ce qui suit provient de $tableau, le schema sql de la table.        
       $ini[$x] = "longueur=".$tableau[$titre]["longueur"]; $x++;
       $ini[$x] = "type=".$tableau[$titre]["type"]; $x++;
       $ini[$x] = 'clePrimaire=0'; $x++;   
@@ -270,13 +275,25 @@ class IniData extends UniConnect
     $stmt = NULL ; $ini = array();    
     return $sortie;
   } 
-  /**
-  * methode privée calculDataPassive: 
-  * creation du fichier ini pour les 'champs Passifs'  selon un nom de table et un nom de fichier
+	/** methode de detection et traitement des apostrophes entitisés.
+	@param $chaine string chaine à traiter
+	@return $chaine modifiée ou non
+	*/
+	private function aposentite($chaine)
+	{
+		$chaine = strval($chaine);		
+		if ($posApos = strpos($chaine,"&")){    //repère les apostrophes entitisées
+    	$chaine = htmlspecialchars_decode($chaine,ENT_QUOTES);          
+      $chaine = str_replace("'",'"\'"',$chaine);
+		}
+		return $chaine;
+	}
+	
+/** Creation du fichier ini pour les 'champs passifs' selon un nom de table et un nom de fichier.
   * @param $table: string, nom d'une table 'passive'
   * @param $fichier: string, nom complet du fichier ini 
   * @return array() le fichier ini crée et parsé en memoire
-  */
+*/
   private function calculDataPassive($table,$fichier)    //($table,$tableau,$fichier)
   {  
     $ligne = $column = $ini = $inischema = $sortie = array();
@@ -293,11 +310,8 @@ class IniData extends UniConnect
     while ($rslt = $stmt->fetch(PDO::FETCH_OBJ)){   
       for ($y = 0; $y < $compt;$y++){               
         $nomColumn = $this->passiveChamps[$y];
-        $column[$y]=$rslt->$nomColumn;
-        if ($posApos = strpos($column[$y],"&")){    //repère les apostrophes entitisées
-          $column[$y] = htmlspecialchars_decode($column[$y],ENT_QUOTES);          
-          $column[$y] = str_replace("'",'"\'"',$column[$y]);
-        } 
+        $nomDeCol = $rslt->$nomColumn;
+        $column[$y] = $this->aposentite($nomDeCol);
       }
       $ligne[]=$column;
     }
@@ -319,11 +333,10 @@ class IniData extends UniConnect
     return $sortie;
   }   
  
-   /**
-  * methode qui concentre les opérations d'ecritures dans $fichier
-  * @param: $fichier: string; le nom absolu d'un fichier ini
-  * @param: $tableau: array(), le tableau des lignes à ecrires dans $fichier
-  * @return: un array() rempli par parse_ini_file("$fichier",true)
+   /** Concentre les opérations d'ecritures dans $fichier
+  * @param $fichier: string; le nom absolu d'un fichier ini
+  * @param $tableau: array(), le tableau des lignes à ecrires dans $fichier
+  * @return array() rempli par parse_ini_file("$fichier",true)
   */ 
   private function ecriture($fichier,$tableau)
   {
@@ -347,44 +360,50 @@ class IniData extends UniConnect
     return $iniSchema;
   } 
 
-  /********************************************************************
-  * Methodes protected sont appelables par les methodes filles
-  */
-  /**
-  *  Chargement ou calcul du fichier $this->fileContexte
-  *  Crée un fichier .ini pour tout le contexte (multi table)
-  *  @param : $contexte, string, nom du contexte
-  *  @param : $statut, string, nom du statut
-  *  Ces deux parametres sont ici obligatoires
+  
+  /** Chargement du fichier $this->fileContexte, crée un fichier .ini pour tout le contexte (multi table).
+  *  @param $contexte string, nom du contexte, ici obligatoire
+  *  @param $statut string, nom du statut, ici obligatoire
+  * 
   * La constante DIRCONTEXTE est le path du repertoire des fichiers de  contexte
   */
   protected function chargerContexte($contexte,$statut)
   {
-    //variables internes à la fonction    
+    //variables internes    
     $x = 0;
     $fpc = $regex = $regstat = '';
     $iniCont = $tables = $tabContexte = $iniMasques = $cles = array(); 
     
     //Le statut et le contexte ne s'improvise pas
-    if (! in_array($statut, $this->arrayStatuts)) {  throw new MyPhpException ("Statut invalide !");}
-    elseif (! in_array($contexte,$this->arrayContextes)) {  throw new MyPhpException ("Contexte invalide !");}
-    
-    //Initialisations de variables de la classe, parser le Contexte.ini
+    if (! in_array($statut, $this->arrayStatuts)) {  
+			throw new MyPhpException ("Statut invalide !");
+		}
+    elseif (! in_array($contexte,$this->arrayContextes)) {  
+			throw new MyPhpException ("Contexte invalide !");
+		}
+    //Initialisations de variables de la classe, parser le fichier_de_contexte.ini
     $this->statut = $statut;    
     $this->contexte = $contexte;
     $this->fileContexte = DIRCONTEXTE.$this->contexte.'.ini'; 
-    if (! $tabContexte = parse_ini_file("$this->fileContexte",TRUE))
-    { throw new MyPhpException ("Le fichier de contexte est absent");} 
-    $this->fileDataContexte = DIRDATA.$this->contexte."_data.ini"; //à ce stade, ce n'est qu'une chaine
+    if (! $tabContexte = parse_ini_file("$this->fileContexte",TRUE)){
+     	throw new MyPhpException ("Le fichier de contexte est absent");
+		} 
+		//à ce stade, ce n'est qu'une chaine
+    $this->fileDataContexte = DIRDATA.$this->contexte."_data.ini"; 
     $this->mailCont = $tabContexte["general"]["mail"];
-    if (!empty($tabContexte["general"]["horsAntenne"])) { $this->haCont = $tabContexte["general"]["horsAntenne"]; }
-    if (!empty($tabContexte["general"]["horsRegion"])) { $this->haReg = $tabContexte["general"]["horsRegion"];  }
-    
-    //initialisation du contexte dynamique, le contexte des tables principales en ecriture:    
+
+    if (!empty($tabContexte["general"]["horsAntenne"])) { 
+			$this->haCont = $tabContexte["general"]["horsAntenne"]; 
+		}
+    if (!empty($tabContexte["general"]["horsRegion"])) { 
+			$this->haReg = $tabContexte["general"]["horsRegion"];  
+		}
+    //initialisation des tables dynamiques, les tables principales:    
     $this->dynTables = explode(",",$tabContexte["dynamique"]["tables"]);
     $this->dynPK = explode(",",$tabContexte["dynamique"]["PK"]); 
-    $this->PPK = $this->dynPK[0]; //LA CLE PRIMAIRE PRINCIPALE DU CONTEXTE
-    if (isset($tabContexte["dynamique"]["FK"])){   
+    $this->PPK = $this->dynPK[0]; 
+    
+		if (isset($tabContexte["dynamique"]["FK"])){   
       $this->dynFK = $tabContexte["dynamique"]["FK"];
       $this->dynFKP = $tabContexte["dynamique"]["FKP"];
       $this->liensCles[$this->dynFK] = $this->dynFKP;
@@ -398,10 +417,11 @@ class IniData extends UniConnect
       foreach ($this->extraFK as $num=>$cle){
         $this->liensCles[$cle] = $this->extraFKP[$num];
       }
-    }
-    // initialisation du contexte 'liaison' si une liaison sql multi2multi est necessaire, lien au contexte statique
-    // creation de $this->schemaLiaison
-    if (!empty($tabContexte["liaison"])){
+    }    
+		// si une liaison sql multi2multi est necessaire : 
+		//initialisation des paramètres dits de liaison 
+		// initialisation du schema sql basique des tables de'liaison' 
+      if (!empty($tabContexte["liaison"])){
       $this->liaisonTable = $tabContexte["liaison"]["table"];
       $this->liaisonFK = explode(",",$tabContexte["liaison"]["FK"]);
       $this->liaisonFKP = explode(",",$tabContexte["liaison"]["FKP"]);
@@ -413,70 +433,115 @@ class IniData extends UniConnect
       foreach ($this->liaisonFK as $num=>$cle){  
         $this->liensCles[$cle] = $this->liaisonFKP[$num];
       }
-      if (file_exists($this->fileLiaisonTable)){ $this->schemaLiaison= parse_ini_file("$this->fileLiaisonTable",TRUE); }
-      else { $this->schemaLiaison= $this->schemaTable($this->liaisonTable); }
+      if (file_exists($this->fileLiaisonTable)){ 
+				$this->schemaLiaison= parse_ini_file("$this->fileLiaisonTable",TRUE); 
+			}
+      else { 
+				$this->schemaLiaison= $this->schemaTable($this->liaisonTable); 
+			}
     }    
-    /**
-    * initialisation des valeurs  'statiques', une valeur 'statique' 
-    * est extraite d'une autre table que la table dynamique
-    * table dynamique et table statique sont reliées par une table de liaison 
-    * relation sql : multi(dynamique) to multi(statique) via table 'liaison' 
-    * caculer $this->schemaStatique  : par appel à schemaTable($this->statInTable)  
-    * calculer $this->schemaDataStatique  : appel à calculDataStatique($this->statInTable,$this->statInChamps)
-    */    
+    // initialisation des valeurs de tables et colonnes 'statiques'
+    // table dynamique et table statique sont reliées par une table de liaison 
+    // relation sql : multi(dynamique) to multi(statique) via table 'liaison' 
+    // caculer le schema sql basique: par appel à schemaTable($this->statInTable)  
+    // calculer les specificités relationnelles statiques  : appel à calculDataStatique($this->statiqueTable,$this->schemaStatique,$this->fileStatiqueData)
+      
     if (!empty($tabContexte["statique"])){
       $this->statiqueTable = $tabContexte["statique"]["tables"];
       $this->statiquePK = $tabContexte["statique"]["PK"];
-      if (!empty($tabContexte["statique"]["champs"])){  $this->statiqueChamps = $tabContexte["statique"]["champs"];}
-      if (!empty($tabContexte["statique"]["valeurs"])){ $this->statiqueValeurs = explode(",",$tabContexte["statique"]["valeurs"]);}
+      if (!empty($tabContexte["statique"]["champs"])){  
+				$this->statiqueChamps = $tabContexte["statique"]["champs"];
+			}
+      if (!empty($tabContexte["statique"]["valeurs"])){ 
+				$this->statiqueValeurs = explode(",",$tabContexte["statique"]["valeurs"]);
+			}
       $this->fileStatiqueTable = DIRTABLE.$this->statiqueTable.'.ini';
       $this->fileStatiqueData = DIREXTRA.$this->statiqueTable.'_stat.ini'; 
-      if (file_exists($this->fileStatiqueTable)){ $this->schemaStatique = parse_ini_file("$this->fileStatiqueTable",TRUE);  }
-      else { $this->schemaStatique = $this->schemaTable($this->statiqueTable);}
-      if (file_exists($this->fileStatiqueData)){ $this->schemaDataStatique = parse_ini_file("$this->fileStatiqueData",TRUE); }
-      else {  $this->schemaDataStatique = $this->calculDataStatique($this->statiqueTable,$this->schemaStatique,$this->fileStatiqueData); } 
+      if (file_exists($this->fileStatiqueTable)){ 
+				$this->schemaStatique = parse_ini_file("$this->fileStatiqueTable",TRUE);  
+			}
+      else { 
+				$this->schemaStatique = $this->schemaTable($this->statiqueTable);
+			}
+      if (file_exists($this->fileStatiqueData)){ 
+				$this->schemaDataStatique = parse_ini_file("$this->fileStatiqueData",TRUE); 
+			}
+      else {  
+				$this->schemaDataStatique = $this->calculDataStatique($this->statiqueTable,$this->schemaStatique,	$this->fileStatiqueData); 
+			} 
     }  
+    //Prendre en compte les données passives (la liste passive sera un tableau mis en cache)
+    //relation sql: multi(dynamique) to one(passive) 
+    // calculer le schéma sql basique : par appel de schemaTable($this->passiveTable)
+    //calculer les spécificités 'passives': par appel de calculDataPassive($this->passiveTable,$this->filePassiveData)
     
-    /** Prendre en compte des donnees passives (la liste passive sera un tableau mis en cache)
-    * relation sql: multi(dynamique) to one(passive) 
-    * calcul de $this->schemaPassive : par appel de schemaTable($this->passiveTable)
-    * calcul de $this->schemaDataPassive : par appel de calculDataPassive($this->passiveTable,$this->schemaPassive,$this->filePassiveData)
-    */
     if (!empty($tabContexte["passive"])){
       $this->passiveTable = $tabContexte["passive"]["tables"];
-      $this->passiveChamps = explode(",",$tabContexte["passive"]["champs"]); //doit inclure la PK de la table
+			//doit inclure la PK de la table passive
+      $this->passiveChamps = explode(",",$tabContexte["passive"]["champs"]); 
       $this->passivePK = $tabContexte["passive"]["PK"];
       $this->filePassiveTable = DIRTABLE.$this->passiveTable.'.ini';
       $this->filePassiveData = DIREXTRA.$this->passiveTable.'_pass.ini';
-      if (file_exists($this->filePassiveTable)){ $this->schemaPassive = parse_ini_file("$this->filePassiveTable",TRUE); }
-      else { $this->schemaPassive = $this->schemaTable($this->passiveTable); }
-      if (file_exists($this->filePassiveData)){ $this->schemaDataPassive = parse_ini_file("$this->filePassiveData",TRUE); }
-      else { $this->schemaDataPassive = $this->calculDataPassive($this->passiveTable,$this->filePassiveData); }     
+      if (file_exists($this->filePassiveTable)){ 
+				$this->schemaPassive = parse_ini_file("$this->filePassiveTable",TRUE); 
+			}
+      else { 
+				$this->schemaPassive = $this->schemaTable($this->passiveTable); 
+			}
+      if (file_exists($this->filePassiveData)){ 
+				$this->schemaDataPassive = parse_ini_file("$this->filePassiveData",TRUE); 
+			}
+      else { 
+				$this->schemaDataPassive = $this->calculDataPassive($this->passiveTable,$this->filePassiveData); 
+			}     
     }  
+
     //creation du tableau des formulaires Obligatoires et Facultatifs selon les statuts et les tables dynamiques
     if ($this->statut == 'anonym'){    
-      if (!empty($tabContexte["anonym"]["facul"])){ $this->dataFacul = explode(",",$tabContexte["anonym"]["facul"]); }
-      if (!empty($tabContexte["anonym"]["oblig"])){ $this->dataOblig = explode(",",$tabContexte["anonym"]["oblig"]); }       
+      if (!empty($tabContexte["anonym"]["facul"])){ 
+				$this->dataFacul = explode(",",$tabContexte["anonym"]["facul"]); 
+			}
+      if (!empty($tabContexte["anonym"]["oblig"])){ 
+				$this->dataOblig = explode(",",$tabContexte["anonym"]["oblig"]); 
+			}       
     }    
     elseif ($this->statut == 'membre'){
-      if (!empty($tabContexte["membre"]["facul"])){ $this->dataFacul = explode(",",$tabContexte["membre"]["facul"]); }      
-      if (!empty($tabContexte["membre"]["oblig"])){ $this->dataOblig = explode(",",$tabContexte["membre"]["oblig"]); }
-      if (!empty($tabContexte["membre"]["vue"])) { $this->dataVue = explode(",",$tabContexte["membre"]["vue"]); }
+      if (!empty($tabContexte["membre"]["facul"])){ 
+				$this->dataFacul = explode(",",$tabContexte["membre"]["facul"]); 
+			}      
+      if (!empty($tabContexte["membre"]["oblig"])){ 
+				$this->dataOblig = explode(",",$tabContexte["membre"]["oblig"]); 
+			}
+      if (!empty($tabContexte["membre"]["vue"])) { 
+				$this->dataVue = explode(",",$tabContexte["membre"]["vue"]); 
+			}
     }
     elseif ($this->statut == 'responsable'){
-      if (!empty($tabContexte["responsable"]["facul"])){ $this->dataFacul = explode(",",$tabContexte["responsable"]["facul"]); }
-      if (!empty($tabContexte["responsable"]["oblig"])){ $this->dataOblig = explode(",",$tabContexte["responsable"]["oblig"]); }
-      if (!empty($tabContexte["responsable"]["vue"])) { $this->dataVue = explode(",",$tabContexte["responsable"]["vue"]); }
+      if (!empty($tabContexte["responsable"]["facul"])){ 
+				$this->dataFacul = explode(",",$tabContexte["responsable"]["facul"]); 
+			}
+      if (!empty($tabContexte["responsable"]["oblig"])){ 
+				$this->dataOblig = explode(",",$tabContexte["responsable"]["oblig"]); 
+			}
+      if (!empty($tabContexte["responsable"]["vue"])) { 
+				$this->dataVue = explode(",",$tabContexte["responsable"]["vue"]); 
+			}
     }  
     elseif ($this->statut == 'admin'){
-      if (!empty($tabContexte["admin"]["facul"])){ $this->dataFacul = explode(",",$tabContexte["admin"]["facul"]); }
-      if (!empty($tabContexte["admin"]["oblig"])){ $this->dataOblig = explode(",",$tabContexte["admin"]["oblig"]); }
-      if (!empty($tabContexte["admin"]["vue"])) { $this->dataVue = explode(",",$tabContexte["admin"]["vue"]); }
-    } 
-    
+      if (!empty($tabContexte["admin"]["facul"])){ 
+				$this->dataFacul = explode(",",$tabContexte["admin"]["facul"]); 
+			}
+      if (!empty($tabContexte["admin"]["oblig"])){ 
+				$this->dataOblig = explode(",",$tabContexte["admin"]["oblig"]); 
+			}
+      if (!empty($tabContexte["admin"]["vue"])) { 
+				$this->dataVue = explode(",",$tabContexte["admin"]["vue"]); 
+			}
+    }
     //charge le fichier _data.ini ad hoc  ou calcul du schema de contexte pour chargement à la fin
-    if ( file_exists($this->fileDataContexte))      
-    {  $this->dataContexte = parse_ini_file("$this->fileDataContexte",TRUE);}
+    if ( file_exists($this->fileDataContexte)){     
+    	$this->dataContexte = parse_ini_file("$this->fileDataContexte",TRUE);
+		}
     else { 
       //appel de methode schemaTable pour chaque table dynamique        
       foreach ($this->dynTables as $idx=>$nomTable){
@@ -494,14 +559,12 @@ class IniData extends UniConnect
       //nettoyages
       unset($iniCont);
     }
-  
     //Ajout des donnees statiques à $this->dataContexte et completion du tableau $this->dataFacul
     if (!empty($this->schemaDataStatique)){
       foreach ($this->schemaDataStatique as $nomextra=>$valextra){
         $this->dataContexte[$nomextra] = $valextra;  
       }                     
     }
-  
     //detection de oblig et facul répartie à toutes les donnees  
     $this->clesDataContexte = array_keys($this->dataContexte);
     foreach($this->clesDataContexte as $x=>$nom){
@@ -511,19 +574,20 @@ class IniData extends UniConnect
       foreach ($this->dataFacul as $key=>$val){  
         if ($val == $nom){  $this->dataContexte[$nom]['possible'] = 1;}
       }
-    }  
-      
+    }        
     //rajout des masques au schema de contexte (toujours après ecriture du .ini) 
     foreach ($this->dynTables as $nomTable){ 
       //parcour des tables requises et chargement des masques pour chaque table
       //Le nom du masque doit correspondre au nom d'une colonne de la table !!      
       $this->table = $nomTable;
-      if (! $this->masques = $this->chargerMasques($this->table))
-      { throw new MyPhpException("Impossible de charger le tableau des masques");}
+      if (! $this->masques = $this->chargerMasques($this->table)){
+       	throw new MyPhpException("Impossible de charger le tableau des masques");
+			}
       
       //creation du tableau de tous les masques (multi table)     
-      foreach ($this->masques as $nomasque=>$masq)
-      {  $iniMasques[$nomasque] = $masq;}
+      foreach ($this->masques as $nomasque=>$masq){
+        $iniMasques[$nomasque] = $masq;
+			}
     }
     // parcours du tableau produit par la lecture de $this->fileDataContexte
     // association de l'attribut et de son masque regex
@@ -585,30 +649,31 @@ class IniData extends UniConnect
     $this->dataContexte = $this->chargerContexte($contexte,$statut);
     return $this->dataContexte;
   }  
-  /**
-  *  Méthode schemaTable()
-  *  @param : $nom_table; string le nom de la table a charger
+  /** Execute la méthode privee showColumns ou lit le fichier .ini
+  *  @param  $nom_table string le nom de la table a charger
   *  la constante DIRTABLE doit exister et indiquer le path des fichiers $nom_table.ini
-  *  execute la méthode privee showColumns ou lit le fichier .ini
-  *  retourne toujours le tableau des metaData de : $this->table
+  *  @return array un tableau des metaData de : $this->table
   */
   protected function schemaTable($nom_table)
   {      
     $regex = '';$tabIniT = array();
     $this->table = $nom_table;
     $this->fileTable =  DIRTABLE.$this->table.'.ini';       
-    if (!file_exists($this->fileTable)) {  $tabIniT = $this->showColumns($this->table); }
-    else { $tabIniT = parse_ini_file("$this->fileTable",TRUE); } 
+    if (!file_exists($this->fileTable)){  
+			$tabIniT = $this->showColumns($this->table); 
+		}
+    else { 
+			$tabIniT = parse_ini_file("$this->fileTable",TRUE); 
+		} 
     return $tabIniT;
   } 
    
-  /********************************************************************
-  * Methodes public sont preparent l'encapsulation pour la classe GererData.class.php
-  *
-  * Les donnees oblig pour une table orientation formulaire client
+  /** Traitement des échappement automatiques
+	*
   * Cette fonction supprime tout echappement automatique des donnees http
   * dans un tableau de dimmension quelconque. Agit ou fait un appel récursif.
   * Sources: http://www.lamsade.dauphine.fr/rigaux/mysqlphp/?page=code
+	* @param $tableau array le tableau à traiter
   */
   protected function magicNormHTTP($tableau)
   {
@@ -621,7 +686,11 @@ class IniData extends UniConnect
     }
     return $tableau;
   }
-
+	/** Les donnees oblig pour une table orientation formulaire client.
+	*
+	* @param $nom_table string nom de la table sql
+	* @return array $dataTableOblig
+	*/
   public function attributsOblig($nom_table)
   {
     $clesTable = $schema = $dataTableOblig = array();    
@@ -633,10 +702,12 @@ class IniData extends UniConnect
     return $dataTableOblig;  
   }
   
-  /**
-  * Les donnes facultatives pour une table selon contexte dynamique, orientation formulaire (client)
+  /** Les donnes facultatives pour une table selon contexte dynamique, orientation formulaire (client).
   * Si il s'agit d'une table de liaison, mettre les clés du tableau du schema  statique   
-  */
+	*
+	* @param $nom_table string nom de la table sql
+	* @return array $dataTableFacul  
+	*/
    public function attributsFacul($nom_table)
    {
     $clesTable = $schema = $dataTableFacul = array();     
@@ -652,10 +723,12 @@ class IniData extends UniConnect
     }    
     return $dataTableFacul;
   }
-  /**
-  *   l'ensemble des donnees requises et facul pour une table
-  *   orientation database, les attributs viennent tous de la base  
-  */
+  /**l'ensemble des donnees requises et facul pour une table.
+	*
+  *  orientation database, les attributs viennent tous de la base  
+	*	 @param $nom_table string nom de la table sql  
+	*  @return array $dataTableContexte
+	*/
   public function attributsTable($nom_table)
   {  
     $attrTableF = $attrTableO = $dataTableContexte = array();  
@@ -677,8 +750,8 @@ class IniData extends UniConnect
   /**
   * charge  les données facultatives et obligatoires avec leurs proprietes completes pour une table d'un contexte
   * pour les données 'statiques', charge le schema des données statiques
-  * @param $nom_table, string, la table a charger
-  * @param $pk, bool, indique si la cle primaire doit etre rajoutee ou pas
+  * @param $nom_table string la table a charger
+  * @param $pk  bool indique si la cle primaire doit etre rajoutee ou pas
   * retourne un tableau
   */
   public function chargerTable($nom_table,$pk = NULL)
@@ -701,9 +774,10 @@ class IniData extends UniConnect
     }    
     return $dataTableCharge;
   }
-  /**
-  * retourne en array() l'ensemble du nom des tables d'un contexte ou une valeur nulle
-  */
+  /** Retourne le nom des tables dynamiques du contexte en cours.
+	@param $dynonly bool si absent et présence de tables de liaison, celles-ci seront rajoutées  
+	@return array 
+	*/
   public function getTables($dynonly=NULL)
   {
     $wagon = array();
@@ -715,8 +789,7 @@ class IniData extends UniConnect
     }
     return $wagon;
   }
-  /**
-  * retourne le nom de la table passive du contexte ou NULL
+  /** Retourne le nom de la table passive du contexte ou NULL
   */
   public function getPassiveTable()
   {
@@ -776,10 +849,6 @@ class IniData extends UniConnect
   {
     return $this->dataOblig;
   }
-  protected function output($data)
-  {
-    if (is_array($data)) {echo '<pre>';print_r($data);echo '</pre>';}
-    else {    echo $data; }
-  }
+  
 }  
   

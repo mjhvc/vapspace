@@ -13,8 +13,11 @@ class UniConnect
   private static $statement = null; /**<  paramètres propres à l'objet PDO*/
   private $pdoStatement = null; /**<  paramètres propres à l'objet PDO*/
   
-/**  Constructeur prive, garanti le singleton car une seule instance de la classe est fournir pour tout le script.
-*/ 
+  /**  Constructeur prive, garanti le singleton car une seule instance de la classe est fournir pour tout le script.
+  
+  Crée une instance de la classe PDO avec leparamètres DSN fournis par le fichier dsn.php créé à l'installation de l'application. TODOREF
+
+  */ 
   private function __construct()
   { 
     try {    

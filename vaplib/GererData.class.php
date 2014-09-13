@@ -2,9 +2,10 @@
  
 /**
 @class GererData :  
-@brief traiter les actions entre les données clientes et la database.
+@brief   traitement en database des actions sql (insertion, mise à jour, suppression, sélection) des données en database
 
 [basé sur la notion de contexte traité par sa classe parente IniData] (@ref IniData)
+[classe appellée par le controleur principal] [@ref Controleur]
 
 @author marcvancraesbeck@scarlet.be
 @copyright [GNU Public License](@ref licence.dox)
@@ -18,7 +19,7 @@ class GererData extends IniData
   protected $champUtile = '';	/**< string, le nom de la colonne de liaison employée */
   protected $champInutile = '';	/**< string, le nom de la colonne de liaison non employée */
   protected $classement = array();	/**< pour classer données, utilisé par inscrire, mettreajour */
-  protected $cleStat = '';	/**< le nom de la FK (de liaison) qui pointe sur la PK de table statique'*/  
+  protected $cleStat = '';	/**< le nom de la FK (de liaison) qui pointe la PK de table statique'*/  
   protected $lastId ;	/**< integer, mémoriser le dernière PK introduite*/  
   protected $nomClePK; /**< nom de la Principal Primary Key (PPK) */
   protected $nomCleFK;	/**< nom d'une cle FK pointant vers la PPK */
@@ -116,14 +117,14 @@ class GererData extends IniData
     return $passive;
   }
   /** Appel du nom de la table de liaison selon contexte et statut en cours
-  * @return string $this->liaisonTable 
+  @return string $this->liaisonTable 
   */
   public function getLiaisonTable()
   {
     return $this->liaisonTable;
   }
    /** Appel des noms des tables extra du contexte et statut en cours. 
-  * @return array avec le nom des tables extra
+   @return array avec le nom des tables extra
   */
   public function getExtraTable()
   {
@@ -138,14 +139,14 @@ class GererData extends IniData
      return $this->PPK;
   }
   /** Appel du tableau des clés FK classées [extra] dans le contexte.ini
-  * @return array un tableau des FK classées dans [extra] uniquement 
+  @return array un tableau des FK classées dans [extra] uniquement 
   */
   public function getExtraFK()
   {
     return $this->extraFK;
   }
   /** Une instance de l'objet de connexion à la Base de Donnée (BD)
-  * @return l'objet de la connexion en bd
+  @return l'objet de la connexion en bd
   */
   public function getCnx()   
   {
@@ -160,7 +161,7 @@ class GererData extends IniData
     return $liste;
   }
   /** la liste des attributs obligatoires au contexte
-  @return array(), 
+  @return array()
   */
   public function getOblig()
   {
@@ -184,21 +185,21 @@ class GererData extends IniData
     return $liste;
   }
   /** La liste des valeurs [statiques] calculé par parent::chargerContexte($contexte,$statut)
-  @return array $this->statiqueValeurs, 
+  @return array $this->statiqueValeurs
   */
   public function getStatiqueValeurs()
   {
     return $this->statiqueValeurs;
   }
   /** La tableau calculé par parent::chargerContexte() sur base de contexte.ini[statique]
-  * @return array $this->schemaDataStatique
+  @return array $this->schemaDataStatique
   */
   public function getSchemaDataStatique()
   {
     return $this->schemaDataStatique;
   }
   /** La tableau calculé par parent::chargerContexte() sur base de contexte.ini[passive] 
-  * @return array $this->schemaDataPassive,  
+  @return array $this->schemaDataPassive,  
   */
   public function getSchemaDataPassive()
   {
@@ -221,9 +222,9 @@ class GererData extends IniData
     return $newTab;
   }
   /** Charger le schéma d'une table
-  * @param	$table string le nom d'une table sql
-  * @param	$flag, bool
-  * @return array
+  @param	$table string le nom d'une table sql
+  @param	$flag bool
+  @return array
   */
   public function getDataTable($table,$flag=NULL)
   {
@@ -244,10 +245,12 @@ class GererData extends IniData
     return $dataCont;
   }
   //--------------protected---------------------//
-  /**
-  * dataEntity() connerti les elements html en entites html
-  * @param $chaine : string en entrée
-  * @return string, une chaine convertie
+   
+	/**converti les elements html en entites html
+
+	Il n'y a pas de conversion dans le contexte news (seulement accessible aux statuts admins et responsable) 
+  @param $chaine string en entrée
+  @return string une chaine convertie
   */
   protected function dataEntity($chaine)
   {
@@ -258,12 +261,12 @@ class GererData extends IniData
     }
     return $propre;
   }
-  /**
-  * preparation()  crée et retourne un tableau par Table avec 
-  * - comme cles : les noms des champs oblig et facul de la table du contexte en parametre 
-  * - comme valeur: leurs valeurs PRISES DANS LA DATABASE
-  * @param $valcle, integer  est une FK (propre au contexte) ou un PK mais la FK du contexte sera selectionnée en premier
-  * @param $table: string, nom de la table oé preparer les donnees
+  /**crée et retourne un tableau par ligne de Table 
+  
+	- cles du tableau : les noms des champs oblig et facul de la table du contexte en parametre 
+  - valeurs du tableau : leurs valeurs PRISES DANS LA DATABASE
+  @param $valcle integer  valeur d'une cle sql (PK ou FK) la FK du contexte sera selectionnée en premier
+  @param $table string nom de la table oé preparer les donnees
   */
   protected function preparation($valcle,$table) 
   {    
@@ -319,20 +322,22 @@ class GererData extends IniData
     $stmt = NULL;
     return $tableBaseCont;   
   }
-  /**
-  * chargeDataStat()
-  * recoit en parametres : nom(string) et valeur($string) 
-  * 'nom' est le nom d'une valeur statique selectionnee precedemment par dataClasse()
-  * valeur est la valeur 'statique' de 'nom'
-  * retourne un array() 
-  * avec comme clés : un nom des colonnes parmis FK et 'champs spécifiques' de la table de liaison 
-  * avec comme valeurs : la valeur de ces colonnes pour la table de liaison (sauf pour la cle FK vers PPK)
-  * Cette methode fait donc la relation entre des valeurs statiques et 
-  * les valeurs ad hoc différentes mais liées sur la table de liaison
-  * exemple : 
-  * entree parametre statique : 'STIB' 'ouiavec',  
-  * sortie array('lienhum'=>'idhum,'lientrans'=>12,'utilisation'=>'oui','abonne'=>'oui') 
-  * C'est Controleur.class.php::constructEntity() qui prend la main
+    /**Cette methode classe des valeurs clients 'statiques' perçues pour un traitement ad hoc en table de liaison
+    
+  @param $nom string nom d'une valeur statique sélectionnée par GererData->dataClasse() 
+  @param $valeur string la valeur 'statique' de $nom 
+  @return  array() 
+  - avec comme clés : un nom des colonnes parmis FK et 'champs spécifiques' de la table de liaison 
+  - avec comme valeurs : la valeur de ces colonnes pour la table de liaison (sauf pour la cle FK vers PPK)
+ 
+  Exemple (contexte Membre) : 
+  - Si la méthode reçoit  : 
+    + $nom = 'STIB'; 
+    + $valeur ='ouiavec';  
+  - Il en sort la structure ad hoc pour insertion ultérieure en table de liaison sql: 
+    + array('lienhum'=>'idhum,'lientrans'=>12,'utilisation'=>'oui','abonne'=>'oui') 
+  
+  C'est Controleur.class.php::constructEntity() qui prend la main
   */
   protected function chargeDataStat($nom=NULL,$valeur=NULL)
   {
@@ -402,23 +407,30 @@ class GererData extends IniData
     }
     return $tableaustat;
   }
-  /**
-  * Une methode qui classe les DONNEES CLIENTES (prealablement filtrees par une action du controleur) par TABLE
-  * methodes attributsTable()  -> IniData
-  * boucle foreach 1 : Boucle sur toutes les tables dynamiques du contexte
-  * sous_boucle foreach 1-1: Boucle sur les attributs oblig et facul
-  * sous_boucle foreach 1-2: Recherche d'une cle FK si semblable é $this->PPK  et non listée dans attributsAttendus
-  * boucle foreach 2 : Boucle  sur toutes les donnees  du contexte é la recherche de donnees 'Statiques'      
-  * Si le modéle inclus une structure statique:
-  * sous_boucle 2-1 sur le tableau fourni; detection données statique dans tableau client et
-  * appel de chargeDataStat() avec les donnees ou pas de données 
-  * certains attributsAttendus sont facultatifs...tres important ici...pour de la souplesse
-  * c'est la couche 'controle" qui verifiera la presence obligatoire de certaines donnees      
-  * Retourne un array : 
-  * data 'dynamiques': $wagon[$this->table] = array("nom"=>"valeurcliente")
-  * data 'liaison' : $wagon[$this->tableLiaison][$int] = array('lienhum'=>'idhum,'lientrans'=>12,'utilisation'=>'oui','abonne'=>'oui') 
-  * dataClasse travaille avec un tableau fourni par le client
-  * si une $cleligne est fournie, on est en mode 'update'
+    
+  /** Une methode qui classe les DONNEES CLIENTES (prealablement filtrees par une action du controleur) par TABLE
+    
+  Basée sur la methode IniData->attributsTable() 
+  - La boucle foreach 1 : Boucle sur toutes les tables dynamiques du contexte
+    + sous_boucle 1: Boucle sur les attributs oblig et facul
+    + sous_boucle 2: Recherche d'une cle FK si semblable é $this->PPK  et non listée dans attributsAttendus
+  - La boucle foreach 2 : Boucle  sur toutes les donnees  du contexte à la recherche de donnees 'Statiques'      
+
+  Si le contexte.ini inclus une structure statique:
+  - sous_boucle 2 sur le tableau fourni; 
+    + detection données statique dans tableau client 
+    + appel de chargeDataStat() avec les donnees ou pas de données 
+  
+  Certains attributsAttendus sont facultatifs...tres important ici...pour de la souplesse
+  c'est la couche 'controle" qui verifiera la presence obligatoire de certaines donnees      
+  
+  Exemple de la structure retournée (array)
+  - Si data 'dynamiques': $wagon[$this->table] = array("nom"=>"valeurcliente")
+  - Si inclus data 'liaison' (exemple contexte Membre.ini): $wagon[$this->tableLiaison][$int] = array('lienhum'=>'idhum,'lientrans'=>12,'utilisation'=>'oui','abonne'=>'oui') 
+  
+  @return array    
+  @param $tableau array() fourni par le client
+  @param $FKey string si le nom d'une clé de ligne est fournie, on est en mode 'update'
   */
   protected function dataClasse($tableau,$FKey=NULL)
   {
@@ -465,9 +477,9 @@ class GererData extends IniData
     return $wagon;
   }
   /**
-  * Injecter: Possibilité d'injecter ici plusieurs données non classée(ni oblig ni facul) 
-  * @arg $dataIn, les donneeés é injecter et la table d'injection type: array($table,array($nomChamp),array($valChamp))
-  * @arg $trier, type array: le tableau de valeurs initiales.
+  Injecter: Possibilité d'injecter ici plusieurs données non classée(ni oblig ni facul) 
+  @param $dataIn les donneeés à injecter et la table d'injection type: array($table,array($nomChamp),array($valChamp))
+  @param $trie, type array: le tableau de valeurs initiales.
   */    
   protected function Injecter($trier,$dataIn)
   {

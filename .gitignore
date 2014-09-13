@@ -2,4 +2,7 @@
 docu/
 
 #pas de fichier de sauvegarde
-~
+*~
+
+#ignorer le fichier help
+help

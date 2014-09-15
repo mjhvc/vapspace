@@ -478,8 +478,8 @@ class GererData extends IniData
   }
   /**
   Injecter: Possibilité d'injecter ici plusieurs données non classée(ni oblig ni facul) 
-  @param $dataIn les donneeés à injecter et la table d'injection type: array($table,array($nomChamp),array($valChamp))
-  @param $trie, type array: le tableau de valeurs initiales.
+  @param $dataIn les donneeés à injecter et leur table d'injection formatées comme suit: array($table,array($nomChamp),array($valChamp))
+  @param $trier, type array: le tableau de valeurs initiales.
   */    
   protected function Injecter($trier,$dataIn)
   {
@@ -499,9 +499,12 @@ class GererData extends IniData
     }
     return $trier ;
   }
-  /**
-  *   methode insertion() insere une ligne dans une table (selon contexte)
-  *   retourne $this->lastId valeur de la PK de la ligne inseree  
+  /** insertion sql d'une ligne dans une table sql (selon contexte)
+  retourne $this->lastId valeur de la PK de la ligne inseree.
+  @param $nomTable string nom de la table sql
+  @param $train array le tableau ("nomValeur"=>"valValeur")
+  @param $lastPK integer valeur de  $this->PPK a attribuer à une clé Secondaire propre à cette ligne.
+  @return integer une fois l'insertion accomplie, retourne la valeur de la clé PK de cette ligne.
   */
   protected function insertion($nomTable,$train=array(),$lastPK=NULL)
   { 

@@ -557,17 +557,16 @@ class GererData extends IniData
     }
     else { throw new MyPhpException('Impossible d\'inserer la donnee');}
   }
-  /**
-  * La requete de mise é jour d'une ligne d'une table
-  * @param $nomtable : la table sur laquelle faire un update
-  * @param $train : array() le train des valeurs é mettre é jour
-  * @param $id :integer, la valeur de la PK de la ligne é mettre é jour
-  * @param $flag:(NULL) un drapeau pour evaluer si l'update doit se baser sur une FK
-  * note : $train peut etre minimaliste...
-  * donc, p.ex la mise é jour du champ numbr de spip_vap_core peut s'effectuer par appel de cette methode 
-  * depuis le controleur MembreCtrl.php 
+  /** Construit et exécute la requete sql de mise à jour pour une ligne de table.
+
+	Méthode appellée par $this->mettreajour()
+
+  @param $nomtable string la table sur laquelle faire un update
+  @param $train  array le train des valeurs à mettre à jour
+  @param $id integer  la valeur de la PK de la ligne à mettre à jour
+  @return bool si succès, un message d'erreur sinon.
   */ 
-  protected function update($nomTable,$train,$id,$condExtra=NULL)
+  protected function update($nomTable,$train,$id)
   {
       $this->table = $nomTable;
       $this->schema = $this->schemaTable($this->table);
@@ -585,7 +584,9 @@ class GererData extends IniData
           if ($option['clePrimaire']){ $nomCle = $nom; $testkeys = 1; }
         }   
       }
-      if (empty($testkeys)){ throw new MyPhpException ("La table: ".$this->table." n'a pas de clé primaire en update()??");}
+      if (empty($testkeys)){ 
+				throw new MyPhpException ("La table: ".$this->table." n'a pas de clé primaire en update()??");
+			}
       //creation des chaines $listeNomAttr et $listeValAttrib avec le $sep(arateur)
       //creation de la requete sql     
       foreach ($train as $cle=>$val){
@@ -603,8 +604,7 @@ class GererData extends IniData
       $stmt = $this->bd->prepare($sql);
       foreach ($train as $cle=>$val)
       {
-        switch ($this->schema[$cle]["type"])
-        {
+        switch ($this->schema[$cle]["type"]){
           case ('char') : case('varchar') : case('date') : case('text') : $data_type = PDO::PARAM_STR ; break;
           case('bigint') : case ('int') : case('tinyint') : case('timestamp') : $data_type = PDO::PARAM_INT ; break;
         }    

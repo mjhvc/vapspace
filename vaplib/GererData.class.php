@@ -336,6 +336,8 @@ class GererData extends IniData
     + $valeur ='ouiavec';  
   - Il en sort la structure ad hoc pour insertion ultérieure en table de liaison sql: 
     + array('lienhum'=>'idhum,'lientrans'=>12,'utilisation'=>'oui','abonne'=>'oui') 
+
+ limites du système : ce codage tolère 2 clés FK seulement : 1 clé FK qui point vers la PPK et l'autre clé clé FK qui pointe vers la table statique 
   
   C'est Controleur.class.php::constructEntity() qui prend la main
   */
@@ -363,18 +365,19 @@ class GererData extends IniData
       }
     }
     else {          
-      //detecter la table de liaison, le nom et la valeur de la FK de la table de liaison 
-      //qui pointent vers les valeurs 'Statiques'  
+      //detecter les valeurs de liaison, table, nom et la valeur de la FK qui pointent vers les valeurs 'Statiques'  
       $this->tableLi = $this->schemaDataStatique[$nom]['tableLiaison'];            
       $this->cleStat = $this->schemaDataStatique[$nom]['cleLiaison'];          
       $this->valCleStat = $this->schemaDataStatique[$nom]['valCleLiaison'];         
-      //detecter le nom de la FK de liaison qui pointe sur la PPK         
+      //detecter le nom de la FK de liaison qui pointe sur la PPK 
+              
       foreach ($this->liaisonFK as $num=>$cle){
         if ($cle != $this->cleStat){ 
           $this->ofk = $cle;
           $this->valofk = $this->liaisonFKP[$num];  //ici, rien que le 'nom'de la cle 
         }
       }
+      // A ce jour, les 2 seules clés possibles
       $tableaustat[$this->cleStat] = $this->valCleStat; //la cle FK statique et sa valeur reelle
       $tableaustat[$this->ofk] = $this->valofk;         //la cle PPK et le nom de la PPK en valeur
       
@@ -430,35 +433,45 @@ class GererData extends IniData
   
   @return array    
   @param $tableau array() fourni par le client
-  @param $FKey string si le nom d'une clé de ligne est fournie, on est en mode 'update'
+  @param $FKey string le nom d'une clé  (PK ou FK) peut être fourni
   */
   protected function dataClasse($tableau,$FKey=NULL)
   {
     $drapstat = 0;  $clestatiques = array(); $wagon = array();
+    // ce servir du paramètre $FKey fourni ou utiliser le nom de la PPK
     if (!empty($FKey)) { $adhoCle = $FKey ; }
-    else { $adhoCle = $this->PPK ; }     
+    else { $adhoCle = $this->PPK ; }  
+
+    // Boucler sur les tables dynamiques   
     foreach ($this->dynTables as $nom){         
       $this->table = $nom; 
       $this->schema = $this->schemaTable($this->table);    
-      $this->attributsAttendus  = $this->attributsTable($this->table);    
-      foreach ($this->attributsAttendus as $nomVal){    
+      $this->attributsAttendus  = $this->attributsTable($this->table);
+      //Boucler sur les attributs définis par le contexte    
+      foreach ($this->attributsAttendus as $nomVal){ 
+        // Si une valeur vaut 0, elle existe bien    
         if (isset($tableau[$nomVal]) && $tableau[$nomVal] === 0) {
           $wagon[$this->table][$nomVal] = $tableau[$nomVal];
-        }        
+        } 
+        // passer le filtre dataEntity       
         elseif (!empty($tableau[$nomVal])) {        
           $valeurPropre =  $this->dataEntity($tableau[$nomVal]);          
           $wagon[$this->table][$nomVal] = $valeurPropre;
         }
       }
+      //Détecter vers quoi pointe les clés FK
       foreach ($this->schema as $champ=>$option){
         if (($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $adhoCle)){
           $wagon[$this->table][$champ] = $option["cleSecondaireRelie"];   //valeur symbolique(son nom) maintenant
         }
       }
     }
+    // Détecter si le contexte contient drapeau data, drapeau qui a toujours la valeur 'statique'
+    // drapeau créé par la méthode iniData->calculDataStatique
     foreach ($this->dataContexte as $cont=>$opt) { 
       if (!empty($opt['data'])) { $drapstat++ ; }
     }
+    // charger les données 'statiques' liées au contexte 
     if (!empty($drapstat)){
       $this->table = $this->liaisonTable;
       $this->cleSchemaDataStat = array_keys($this->schemaDataStatique);
@@ -468,8 +481,11 @@ class GererData extends IniData
           $dataStatique[$cpt] = $this->chargeDataStat($stat,$valeur);
           $cpt++;
         }
-      }        
+      }
+      //pas de données clientes mais le volet statique du contexte est bien présent        
       if (empty($cpt)) { $dataStatique[0] = $this->chargeDataStat();} 
+
+      //rajouter les choix 'statiques' du client dans le tableau général
       foreach ($dataStatique as $id=>$ligne){    
         $wagon[$this->table][$id] = $ligne;
       } 
@@ -517,7 +533,7 @@ class GererData extends IniData
     $nbr = count($train);     
     $idx = 0; $marqueur = ''; $listeNomAttrib = ''; $listeMarqueurs = ''; 
     //Attribution de la valeur reelle ($lastPK) aux cles secondaires qui avaient une valeur symbolique et pointent sur $this->PPK 
-    //La 'premiere' table du contexte (celle de la premiere insertion) ne doit pas avoir de FK qui point vers PPK   
+    //La 'premiere' table du contexte (celle de la premiere insertion) ne doit pas avoir de FK qui pointe vers PPK   
     foreach ($this->schema as $champ=>$opt){
       if (($opt['cleSecondaire'])&& ($opt["cleSecondaireRelie"] == $this->PPK)){
         if (is_null($lastPK)){ 
@@ -563,7 +579,7 @@ class GererData extends IniData
 
   @param $nomtable string la table sur laquelle faire un update
   @param $train  array le train des valeurs à mettre à jour
-  @param $id integer  la valeur de la PK de la ligne à mettre à jour
+  @param $id integer  la valeur soit de la PK de la ligne, soit d'une FK pointant vers la PPK à mettre à jour
   @return bool si succès, un message d'erreur sinon.
   */ 
   protected function update($nomTable,$train,$id)
@@ -573,7 +589,7 @@ class GererData extends IniData
       $nbr = count($train);    
       $idx = 0; $marqueur = ''; $chaine = '';$testkey = 0;
       foreach ($this->schema as $nom => $option) {
-        if (empty($flag) && ($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $this->PPK)){
+        if (($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $this->PPK)){
           $nomCle = $nom; 
           $train[$nom] = $id;
           $testkeys = 1;
@@ -617,23 +633,29 @@ class GererData extends IniData
     }
   
   //--------------public---------------------//
-  /**
-  * Cette fonction inscrit des donnees clients en base
-  * Appelle 2 methodes :
-  * $this->dataClasse pour le tri selon les tables
-  * $this->insertion pour le traitement sql
-  * @param $tableau: array() le tableau de donnee é insérer
-  * @param $injection: array() eventuellement un array supplémentaire pour injection
+
+  /** inscrit des donnees clients en base (appel sql INSERT)
+  
+  - Appelle 2 methodes :
+    + $this->dataClasse pour le tri selon les tables
+    + $this->insertion pour le traitement INSERT sql
+  
+  @param $tableau array() le tableau de données à insérer
+  @param $injection array() éventuellement un array supplémentaire pour injection
   */
   public function inscrire($tableau,$injection=array())
   {
     $x = 0;  $id=NULL; $alertInj = NULL;  $premTri = array(); 
-    //Pour toutes les donnees recues, je les range comme suit:
+    //Ranger les données reçues par appel de $this->dataClasse():
     $premTri = $this->dataClasse($tableau);
+    
+    //Eventuellement, rajouter des données hors -contexte à injecter
     if (! empty($injection)){
       $this->classement = $this->Injecter($premTri,$injection);
     }
     else { $this->classement = $premTri; }
+    
+    //traitement sql (INSERT)
     $tableIns = array_keys($this->classement); 
     foreach ($tableIns as $table){               
       // Bien que traitée en premier ici, $id doit exister donc une donnée statique vient aprés une standart      
@@ -642,7 +664,7 @@ class GererData extends IniData
           $idliaison = $this->insertion($table,$tabliaison,$id);
         }
       }
-      else { //premier enregistrement? on recupere lastid et l'attribue é id et é valPPK
+      else { //premier enregistrement? on recupere lastid et l'attribue à id et à valPPK
         $this->lastId = $this->insertion($table,$this->classement[$table],$id);
         if ($x == 0) { 
           $this->valPPK= $this->lastId; 
@@ -653,16 +675,16 @@ class GererData extends IniData
     }
     return $this->valPPK;
   }
-  /**
-  * Met a jour un contexte multi table par appel é update(unetable)
-  * @param $tableau: array() tableau de données  
-  * @param $clelligne: integer la valeur d'une ligne 
+  /** Met a jour un contexte multi table par appel à update(unetable)
+   @param $tableau array() tableau de données  
+   @param $clelligne integer la valeur d'une ligne
+   @param $injection array un tableau hors -contexte à insérer (facultatif) 
   */
   public function mettreajour($tableau,$cleligne,$injection=array())
   {
     $x = $sortie = 0;  $id = NULL; 
     $inLiaison = $premTri = array();     
-    //Pour toutes les donnees recues, je les range [par table] et  [par nom=valeur]
+    //Ranger les données reçues par appel de $this->dataClasse():
     $premTri = $this->dataClasse($tableau);
     if (! empty($injection)){
       $this->classement = $this->Injecter($premTri,$injection);

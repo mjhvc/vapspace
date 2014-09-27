@@ -679,6 +679,7 @@ class GererData extends IniData
    @param $tableau array() tableau de données  
    @param $clelligne integer la valeur d'une ligne
    @param $injection array un tableau hors -contexte à insérer (facultatif) 
+   @return bool si succès, sinon erreur
   */
   public function mettreajour($tableau,$cleligne,$injection=array())
   {
@@ -714,11 +715,15 @@ class GererData extends IniData
     }
     return $sortie;
   }
-   /**
-  * Fonction multi table qui selectionne en DATABASE  et retourne l'ensemble des donnees liées é la PPK d'un contexte.
-  * Pour toute table 'dynamique', les donnees sont : $tableau[$nomTable][$attribut]=$valeur
-  * Pour les tables de liaisons, les donnees sont : $tableau[$idx][$attribut]=$valeur
-  * $idx est de type INT, $nomTable est de type ASSOC ...c'est permis
+   /** sélectionne en DATABASE et retourne l'ensemble des donnees liées à la PPK d'un contexte.
+  
+  @param $clePK integer la valeur d'une clé primaire
+  @return array   de forme :
+  - $tableau[$nomTable][$attribut]=$valeur pour les tables 'dynamiques'
+  - $tableau[$idx][$attribut]=$valeur pour les tables de liaisons, $idx est integer, $attribut est une chaine
+  - $tableau['inliaison'] de type integer, est un compteur de lignes liées aux données enregistrées dans la table de liaison
+  - $tableau['valppk'] la valeur de la clé ppk initiale est retournée.
+   
   */    
   public function selection($clePK)
   {
@@ -726,7 +731,8 @@ class GererData extends IniData
     if (empty($clePK)) {
       throw new MyPhpException("Clé de selection invalide");
     } 
-    $this->valPPK = intval($clePK); //valPPK est la valeur de la PK de la premiére table du contexte
+    //valPPK est la valeur de la PK de la premiére table du contexte
+    $this->valPPK = intval($clePK); 
     foreach ($this->dynTables as $nomtable){     
      $retour[$nomtable] = $this->preparation($this->valPPK,$nomtable);
     }
@@ -741,11 +747,11 @@ class GererData extends IniData
     $retour['valppk'] = $this->valPPK;
     return $retour;  	       
   }
-  /**
-  * Retourne une ligne de table car on selectionne sur une PK
-  * $valcle: string, la valeur de la PK de $table
-  * $table: string, la table sur laquelle travailler 
-  * $colonnes: array(), facultatif mais permet de moduler les colonnes selectionnées 
+  /** Retourne une ligne de table car on selectionne sur une PK
+  @param $valcle integer la valeur de la PK de $table
+  @param $table string la table sur laquelle travailler 
+  @param $colonnes array() facultatif mais permet de moduler les colonnes selectionnées 
+  @return array associatif ['colonne']=valeur
   */
   public function selectUneLigne($valcle,$table,$colonnes=array())  
   {
@@ -776,18 +782,19 @@ class GererData extends IniData
     $stmt->execute(array(':pk'=>$valcle));
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $stmt = NULL;  
-    //$result = $this->magicNormHTTP($result);  
     return  $result;    
   }
-  /**
-  * Methode de selection de ligne par valeurs, 
-  * employée par (Chat,Help,Membre,News)Ctrl.php pour selectionner une seule ligne
-  * employée par Iter.php pour selection multiple ligne 
-  * @param $colonnes, array() : un tableau des colonnes é selectionner
-  * @param $tables, str: la table de selection
-  * @param $nomval, str, nom de la colonne qui conditionne la sélection
-  * @param $varval, la valeur de la colonne de condition type variable
-  * @param $all, bool, drapeau pour indiquer la methode de fetch
+  /** Methode de selection de ligne par valeurs fournie en paramètre, 
+
+  employée par 
+  - (Chat,Help,Membre,News)Ctrl.php pour selectionner une seule ligne
+  - Iter.php pour selection multiple ligne 
+  @param $colonnes array()  un tableau des colonnes é selectionner
+  @param $tables string la table de selection
+  @param $nomval string nom de la colonne qui conditionne la sélection
+  @param $varval la valeur de la colonne de condition type variable
+  @param $all, bool, drapeau pour indiquer la methode de retour de methode PDO::fetch
+  @return array type associatif simple
   */
   public function ligneParValeurs($colonnes,$table,$nomval,$varval,$all=NULL,$condi=NULL)
   {
@@ -805,8 +812,7 @@ class GererData extends IniData
     $stmt->execute(array(":varval"=>$varval));
     if (empty($all)) { $result = $stmt->fetch(PDO::FETCH_ASSOC); }
     else { $result = $stmt->fetchAll(PDO::FETCH_ASSOC); }
-    $stmt = NULL; 
-    //$result = $this->magicNormHTTP($result);     
+    $stmt = NULL;   
     return  $result;    
   }
 

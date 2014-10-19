@@ -5,7 +5,7 @@
 @brief   traitement en database des actions sql (insertion, mise à jour, suppression, sélection) des données en database
 
 [basé sur la notion de contexte traité par sa classe parente IniData] (@ref IniData)
-[classe appellée par le controleur principal] [@ref Controleur]
+[classe appellée par le controleur principal]  
 
 @author marcvancraesbeck@scarlet.be
 @copyright [GNU Public License](@ref licence.dox)
@@ -494,8 +494,8 @@ class GererData extends IniData
   }
   /**
   Injecter: Possibilité d'injecter ici plusieurs données non classée(ni oblig ni facul) 
-  @param $dataIn les donneeés à injecter et leur table d'injection formatées comme suit: array($table,array($nomChamp),array($valChamp))
-  @param $trier, type array: le tableau de valeurs initiales.
+  @param $dataIn array les donneeés à injecter et leur table d'injection formatées comme suit: array($table,array($nomChamp),array($valChamp))
+  @param $trier array: le tableau de valeurs initiales.
   */    
   protected function Injecter($trier,$dataIn)
   {
@@ -577,7 +577,7 @@ class GererData extends IniData
 
 	Méthode appellée par $this->mettreajour()
 
-  @param $nomtable string la table sur laquelle faire un update
+  @param $nomTable string la table sur laquelle faire un update
   @param $train  array le train des valeurs à mettre à jour
   @param $id integer  la valeur soit de la PK de la ligne, soit d'une FK pointant vers la PPK à mettre à jour
   @return bool si succès, un message d'erreur sinon.
@@ -676,8 +676,8 @@ class GererData extends IniData
     return $this->valPPK;
   }
   /** Met a jour un contexte multi table par appel à update(unetable)
-   @param $tableau array() tableau de données  
-   @param $clelligne integer la valeur d'une ligne
+   @param $tableau array tableau de données  
+   @param $cleligne integer la valeur d'une ligne
    @param $injection array un tableau hors -contexte à insérer (facultatif) 
    @return bool si succès, sinon erreur
   */
@@ -789,11 +789,13 @@ class GererData extends IniData
   employée par 
   - (Chat,Help,Membre,News)Ctrl.php pour selectionner une seule ligne
   - Iter.php pour selection multiple ligne 
-  @param $colonnes array()  un tableau des colonnes é selectionner
-  @param $tables string la table de selection
+
+  @param $colonnes array un tableau des colonnes é selectionner
+  @param $table string la table de selection
   @param $nomval string nom de la colonne qui conditionne la sélection
   @param $varval la valeur de la colonne de condition type variable
-  @param $all, bool, drapeau pour indiquer la methode de retour de methode PDO::fetch
+  @param $all bool, drapeau pour indiquer la methode de retour de methode PDO::fetch
+  @param $condi bool facultatif
   @return array type associatif simple
   */
   public function ligneParValeurs($colonnes,$table,$nomval,$varval,$all=NULL,$condi=NULL)

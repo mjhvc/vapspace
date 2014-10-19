@@ -16,20 +16,20 @@ class GererData extends IniData
 {
   //Déclaration attributs 
   protected $attributsAttendus = array();	/**<  pour appeller la méthode parente attributsTable */
-  protected $champUtile = '';	/**< string, le nom de la colonne de liaison employée */
-  protected $champInutile = '';	/**< string, le nom de la colonne de liaison non employée */
-  protected $classement = array();	/**< pour classer données, utilisé par inscrire, mettreajour */
-  protected $cleStat = '';	/**< le nom de la FK (de liaison) qui pointe la PK de table statique'*/  
-  protected $lastId ;	/**< integer, mémoriser le dernière PK introduite*/  
-  protected $nomClePK; /**< nom de la Principal Primary Key (PPK) */
-  protected $nomCleFK;	/**< nom d'une cle FK pointant vers la PPK */
-  protected $nomContexte; /**< nom du contexte */ 
-  protected $ofk;	/**< other foreign key, nom de cle FK qui ne pointe pas sur une PK de table statique*/
-  protected $tableLi;	/**< nom de la table de liaison */  
-  protected $valChampUtile = '';	/**< string, valeur employée par la colonne de liaison */
-  protected $valChampinutile = '';  /**< string, valeur attribuée à la colonne de liaison non utilisée */
-  protected $valofk;	/**< valeur de la other foreign key (ofk) */
-  protected $valPPK;  /**< valeur de la PPK */
+  protected $champUtile = '';	            /**< string, le nom de la colonne de liaison employée */
+  protected $champInutile = '';	          /**< string, le nom de la colonne de liaison non employée */
+  protected $classement = array();	      /**< pour classer données, utilisé par inscrire, mettreajour */
+  protected $cleStat = '';	              /**< le nom de la FK (de liaison) qui pointe la PK de table statique'*/  
+  protected $lastId ;	                    /**< integer, mémoriser le dernière PK introduite*/  
+  protected $nomClePK;                    /**< nom de la Principal Primary Key (PPK) */
+  protected $nomCleFK;	                  /**< nom d'une cle FK pointant vers la PPK */
+  protected $nomContexte;                 /**< nom du contexte */ 
+  protected $ofk;	                        /**< other foreign key, nom de cle FK qui ne pointe pas sur une PK de table statique*/
+  protected $tableLi;	                    /**< nom de la table de liaison */  
+  protected $valChampUtile = '';	        /**< string, valeur employée par la colonne de liaison */
+  protected $valChampinutile = '';        /**< string, valeur attribuée à la colonne de liaison non utilisée */
+  protected $valofk;	                    /**< valeur de la other foreign key (ofk) */
+  protected $valPPK;                      /**< valeur de la PPK */
  
   /** construct réalise quelques initiations puis appelle la méthode parent.  
   */
@@ -49,7 +49,7 @@ class GererData extends IniData
   
   //-------------ENCAPSULATION de IniData pour les controleurs-------------------//
   
-	/** Charger le contexte selon un contexte et un statut, 
+	/** Calculer et charger le contexte selon un contexte et un statut fourni (qui peuvent différer du contexte et statut en cours) 
   @param $contexte	string obligatoire
   @param $statut	string obligatoire
 	@return array [parent::chargerContexte($contexte,$statut)] (@ref chargerContexte())
@@ -184,21 +184,21 @@ class GererData extends IniData
     $liste = $this->dataFacul;
     return $liste;
   }
-  /** La liste des valeurs [statiques] calculé par parent::chargerContexte($contexte,$statut)
+  /** La liste des valeurs [statiques] liées au contexte courant
   @return array $this->statiqueValeurs
   */
   public function getStatiqueValeurs()
   {
     return $this->statiqueValeurs;
   }
-  /** La tableau calculé par parent::chargerContexte() sur base de contexte.ini[statique]
+  /** Le tableau fournit par la section [statique]  du contexte
   @return array $this->schemaDataStatique
   */
   public function getSchemaDataStatique()
   {
     return $this->schemaDataStatique;
   }
-  /** La tableau calculé par parent::chargerContexte() sur base de contexte.ini[passive] 
+  /** Le tableau fournit par la section [passive]  du contexte
   @return array $this->schemaDataPassive,  
   */
   public function getSchemaDataPassive()

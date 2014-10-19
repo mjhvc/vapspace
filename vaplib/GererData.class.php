@@ -246,9 +246,9 @@ class GererData extends IniData
   }
   //--------------protected---------------------//
    
-	/**converti les elements html en entites html
+	/** converti les elements html en entites html
 
-	Il n'y a pas de conversion dans le contexte news (seulement accessible aux statuts admins et responsable) 
+	Il n'y a pas de conversion dans le contexte news (seulement accessible aux statuts admin et responsable) 
   @param $chaine string en entrée
   @return string une chaine convertie
   */
@@ -263,10 +263,11 @@ class GererData extends IniData
   }
   /**crée et retourne un tableau par ligne de Table 
   
-	- cles du tableau : les noms des champs oblig et facul de la table du contexte en parametre 
+	- cles du tableau : les noms des champs oblig et facul de la table en parametre 
   - valeurs du tableau : leurs valeurs PRISES DANS LA DATABASE
-  @param $valcle integer  valeur d'une cle sql (PK ou FK) la FK du contexte sera selectionnée en premier
+  @param $valcle integer  obligatoire valeur d'une cle sql (PK ou FK) une FK pointant sur la PPK sera selectionnée en premier
   @param $table string nom de la table oé preparer les donnees
+  @return array ( à 2 dim) si table liaison
   */
   protected function preparation($valcle,$table) 
   {    
@@ -274,7 +275,7 @@ class GererData extends IniData
     $this->table = strval($table); 
     $this->attributsAttendus = array(); $testkeys = NULL;     
     $this->schema = $this->schemaTable($this->table);
-    //Recherche du nom des cles FK ou PK qui représentent la ligne é preparer 
+     
     //$valcle represente-t-il la valeur d'une cle etrangére d'une table?     
     foreach ($this->schema as $champ=>$option){
       if (($option["cleSecondaire"]) && ($option["cleSecondaireRelie"] == $this->PPK)){
@@ -291,14 +292,16 @@ class GererData extends IniData
       }
     }
     if (empty($testkeys)){ throw new MyPhpException("La table: ".$this->table." n'a pas de clé primaire?");}
+    
     //construction et execution de la requete sql de selection selon la clé (PK ou FK)  
     $ptmq = " = ? ";  
     $whereSql = $this->nomClePK.$ptmq; 
     $fromSql = $this->table;  
-    //Recherche des attributs attendus dans la base de donnée, l'appel de parent::attributsTable() est justifié
+    //Recherche des attributs attendus dans la base de donnée,  
     $this->attributsAttendus  = $this->attributsTable($this->table);    
-    $nbr = count($this->attributsAttendus);      
-    foreach ($this->attributsAttendus as $nomVal){    //Boucle sur les attributs oblig et facul
+    $nbr = count($this->attributsAttendus);
+    //Boucle sur les attributs oblig et facul      
+    foreach ($this->attributsAttendus as $nomVal){   
       ($idx < ($nbr-1))?  $Sep = ", ": $Sep = " "; 
       $wagonSql .= $nomVal.$Sep;
       $idx++; 
@@ -307,7 +310,7 @@ class GererData extends IniData
     $stmt = $this->bd->prepare($sql);
     $stmt->execute(array($valcle));
     
-    //le classement des donnees doit etre différent selon que il s'agit d'une table de 'liaison' ou pas 
+    // une table de 'liaison' peut contenir plusieurs lignes distinctes de réponses  
     if ($this->table == $this->liaisonTable){
       while ($ligne = $stmt->fetch(PDO::FETCH_ASSOC)){
         $tableBaseCont[$x] = $ligne;
@@ -322,7 +325,7 @@ class GererData extends IniData
     $stmt = NULL;
     return $tableBaseCont;   
   }
-    /**Cette methode classe des valeurs clients 'statiques' perçues pour un traitement ad hoc en table de liaison
+    /**Cette methode classe des valeurs 'statiques' perçues par le client pour un traitement ad hoc en table de liaison
     
   @param $nom string nom d'une valeur statique sélectionnée par GererData->dataClasse() 
   @param $valeur string la valeur 'statique' de $nom 
@@ -339,7 +342,6 @@ class GererData extends IniData
 
  limites du système : ce codage tolère 2 clés FK seulement : 1 clé FK qui point vers la PPK et l'autre clé clé FK qui pointe vers la table statique 
   
-  C'est Controleur.class.php::constructEntity() qui prend la main
   */
   protected function chargeDataStat($nom=NULL,$valeur=NULL)
   {
@@ -358,7 +360,7 @@ class GererData extends IniData
           }
         }      
       }
-      if (! empty($this->liaisonChamps)) { //Si des champs spécifiques é la table de liaison existent 
+      if (! empty($this->liaisonChamps)) { //Si des champs spécifiques à la table de liaison existent 
         foreach ($this->liaisonChamps as $champ){ 
           $tableaustat[$champ] = $this->schemaLiaison[$champ]['default'];  
         }
@@ -431,7 +433,7 @@ class GererData extends IniData
   - Si data 'dynamiques': $wagon[$this->table] = array("nom"=>"valeurcliente")
   - Si inclus data 'liaison' (exemple contexte Membre.ini): $wagon[$this->tableLiaison][$int] = array('lienhum'=>'idhum,'lientrans'=>12,'utilisation'=>'oui','abonne'=>'oui') 
   
-  @return array    
+  @return array de type['table']['nomvar']=soit une valeur (contexte normal) soit un tableau associataf pour contexte de liaison.  
   @param $tableau array() fourni par le client
   @param $FKey string le nom d'une clé  (PK ou FK) peut être fourni
   */
@@ -547,7 +549,7 @@ class GererData extends IniData
     foreach ($train as $cle=>$val){
       ($idx < ($nbr-1))?  $Sep = ", ": $Sep = NULL; 
       $listeNomAttrib .= $cle.$Sep;
-      $listeMarqueurs .= ' :'.$cle.$Sep; //et pas $listeNomAttrib !!
+      $listeMarqueurs .= ' :'.$cle.$Sep;  
       $idx++;
     }
     //finalisation des listes d'attributs, de marqueurs et creation de la requete sql
@@ -784,7 +786,7 @@ class GererData extends IniData
     $stmt = NULL;  
     return  $result;    
   }
-  /** Methode de selection de ligne par valeurs fournie en paramètre, 
+  /** Methode de selection de colonnes  d'une ligne selon une  valeur fournie en paramètre, 
 
   employée par 
   - (Chat,Help,Membre,News)Ctrl.php pour selectionner une seule ligne
@@ -818,9 +820,13 @@ class GererData extends IniData
     return  $result;    
   }
 
-   /**
-  * Retourne une ou plus ligne(s) de table car on selectionne sur une FK mais dans le cadre du contexte
-  * $valcle est ici une FK
+   /** Retourne une ou plus ligne(s) de table car on selectionne sur une FK mais dans le cadre du contexte
+  
+  @param $valcle integer est ici une FK
+  @param $table string une table sql
+  @param $cle string, facultatif mais permet de sélectionner éventuellement sur base d'une FK
+  @return array 
+  
   */
   public function selectPlusLignes($valcle,$table,$cle=NULL)
   {
@@ -828,7 +834,7 @@ class GererData extends IniData
     $this->table = $table;
     $valcle = intval($valcle);
     $this->schema = $this->schemaTable($this->table);
-    //Recherche du nom des cles FK ou PK qui représentent la ligne é preparer      
+    //Recherche du nom des cles FK ou PK qui représentent la ligne à preparer      
     // 1 si une 'vrai' clé étrangére est fournie    
     if (!empty($cle)){
       foreach ($this->schema as $champ=>$option){
@@ -855,9 +861,10 @@ class GererData extends IniData
     $stmt = NULL;
     return $sortie;
   }
-  /**
-  * Supprime les donnees liés é un identifiant de contexte
-  * Suppose que $this->dataContexte est defini (par appel é $this->chargerContexte($contexte,$statut))
+  /** Supprime les donnees liés au contexte en cours
+  
+  @param $valcle integer une clé sql PK et FK si une section de liaison est présente au contexte
+  @return booléen
   */
   public function supprime($valcle)
   {
@@ -876,8 +883,11 @@ class GererData extends IniData
     }
     return $testdel;
   }       
-   /**
-  * Supprime une ligne de table car on supprime sur une PK($valcle)
+   /**  Supprime une ligne de table car on supprime sur une PK($valcle)
+    
+    @param $valcle integer qui est ici une PK 
+    @param $table string nom d'une table 
+    @return booléen
   */
   public function supprimeUneLigne($valcle,$table)
   {
@@ -898,7 +908,10 @@ class GererData extends IniData
     }
   }
   /**
-  * $valcle est ici une FK 
+  @param $valcle integer qui est ici une FK 
+  @param $table string nom d'une table 
+  @param $cle string, facultatif mais permet de sélectionner éventuellement sur base d'une FK
+  @return booleen
   */
   public function supprimePlusLignes($valcle,$table,$cle=NULL)
   {

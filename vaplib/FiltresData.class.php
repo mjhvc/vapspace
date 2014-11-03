@@ -1,72 +1,41 @@
 <?php
-
-/******************************************************************************
-*    vapspace est un logiciel libre : vous pouvez le redistribuer ou le       *
-*    modifier selon les termes de la GNU General Public Licence tels que      *
-*    publiés par la Free Software Foundation : à votre choix, soit la         *
-*    version 3 de la licence, soit une version ultérieure quelle qu'elle      *
-*    soit.
-*
-*    vapspace est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE  *
-*    GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou       *
-*    D'ADÉQUATION À UNE UTILISATION PARTICULIÈRE. Pour plus de détails,       *
-*    reportez-vous à la GNU General Public License.                           *
-*
-*    Vous devez avoir reçu une copie de la GNU General Public License         *
-*    avec vapspace. Si ce n'est pas le cas, consultez                         *
-*    <http://www.gnu.org/licenses/>                                           *
-******************************************************************************** 
-*/
-/**
-* @category vapspace
-* @copyright Marc Van Craesbeeck, 2011
-* @license GPL
-* @package MODELE
-* @version 1.0.0
-* @author marcvancraesbeeck@scarlet.be
-*/
-
  
-require_once('IniData.class.php');
-
 /**
-* La classe des filtres hérite de IniData()
-* Aujourd'hui (fevrier 2011) j'utilise la base standart en ligne à ce jour
-* les requètes sont adaptées à cette base
-* Doivent se trouver ici, tous les filtres utilisables par la classe controlData.class.php
-*/
+@class FiltresData 
+@brief la classe des filtres à appeler dans le cadre d'un contexte précis.
+	 
+
+[vers le descripteur des contextes] (@ref  descripteursContexte.dox) 
+@author marcvancraesbeck@scarlet.be
+@copyright [GNU Public License](@ref licence.dox)
+*/  
+require_once('IniData.class.php');
 
 class FiltresData extends IniData
 {
-  /**
-  * Les attributs
-  */
-  private $mail = '' ;
-  private $cle;
-  protected $attributsAttendus = array();
-  private $dataFiltre = array();
-  private $erreurMasque = array();
-  private $erreurTaille = array();
-  private $erreurOblig ='' ;
-  private $formatMail = array();
-  /**
-  * Fonction __construct(), fait appel au parent
+  private $mail = '' ;                    /**< string un mail à tester */
+  protected $attributsAttendus = array(); /**< array utilisé par $this->filtreMasques et $this->filtreTaille  */
+  private $erreurMasque = array();        /**< array utilisé par $this->filtreMasques */
+  private $erreurTaille = array();        /**< array utilisé par $this->filtretaille */
+  private $erreurOblig ='' ;              /**< array utilisé par $this->filtreOblig */
+  private $formatMail = array();          /**< array tableau des champs à n e pas filtrer */
+  
+  /** initiation a minima et appel du __construct parent 
+    @param $contexte string le contexte à charger
+    @param $statut string le statut à charger
   */
   function __construct($contexte=NULL,$statut=NULL)
   {
-    //initialisation des attributs generaux de la classe
-    $this->mail = ''; $this->cle = ''; $this->erreurOblig ='' ;
-    $this->attributsAttendus = array();
-    $this->dataFiltre = array(); $this->erreurMasque = array();
-    $this->erreurTaille = array();
+    //initialisation des champs à ne pas filtrer
     $this->formatMail = array('mail','chatmail','expediteur','commanditaire');
-    //appel le constructeur parent en surchargeant les parametres
+    
+    //appel le constructeur parent avec ses parametres
     if ($contexte != NULL && $statut != NULL) {
       parent::__construct($contexte,$statut); 
     } 
     else {  parent::__construct(); }  
   }
-
+ 
 /*  
   * Fonction qui affiche les erreurs de captures de preg_match_all
   * $nb est le nombre d'erreurs,$match est le tableau fourni par preg_match_all,

@@ -36,10 +36,10 @@ class FiltresData extends IniData
     else {  parent::__construct(); }  
   }
  
-/*  
-  * Fonction qui affiche les erreurs de captures de preg_match_all
-  * $nb est le nombre d'erreurs,$match est le tableau fourni par preg_match_all,
-  * retourne une chaine $retour
+/** affichage des caractères capturés par preg_match_all
+  	@param $nb  integer le nombre d'erreurs,
+		@param $match array le tableau fourni par preg_match_all,
+  	@return  string $retour
   */
   public function affichErreurs($nb,$match)
   {
@@ -49,10 +49,8 @@ class FiltresData extends IniData
 	  return $retour;
   }
   
-/*   
-  * Methode generique. Application de la suppression de tout echappement produit par magic_quotes
-  * si necessaire pour tout tableau contenant des données http.
-  * Sources: http://www.lamsade.dauphine.fr/rigaux/mysqlphp/?page=code 
+/** Methode generique. Application de la suppression de tout echappement produit par magic_quotes si necessaire pour tout tableau contenant des données http.
+  	Sources du script: http://sourceforge.net/projects/webscope/
   */
   public function filtreMagicQuote()
   {
@@ -65,10 +63,9 @@ class FiltresData extends IniData
 	  }
   } 
 
-  /* 
-  * Fonction generique qui enleve tout espace invisible en début et fin des valeurs d'un tableau
-  * C'est un filtre a lui tout seul, doit etre repertorie dans le fichier de contexte
-  * Filtre a appliquer avant masques (pour l'inscription en tout cas)  
+  /** Fonction generique qui enleve tout espace invisible en début et fin des valeurs d'un tableau
+  @param $tableau array passé par référence
+	@return $tableau array 
   */
   public function filtreCarMasq(&$tableau)
   {		
@@ -80,12 +77,13 @@ class FiltresData extends IniData
     }
     return $tableau;
   }
-  /**
-  * Filtre tout doublon selon 
-  * @param $champ(string): nom du champ à verifier
-  * @param $valeur(string): valeur du champ
-  * @param $table : nom de la table
-  * janvier 2012, rajout de $alt une cle facultative pour transformer la methode en compteur
+
+  /** Filtre tout doublon selon paramètres fournis, peut également servir de compteur si une clé faculataive est fournie (paramètre $alt)
+  @param $champ string: nom du champ à verifier
+  @param $valeur string: valeur du champ
+  @param $table string nom de la table
+	@param $alt integer faculatif cle sql pour transformer la methode en compteur général
+	@return booléen
   */
   public function doublon($champ,$valeur,$table,$alt=NULL)
   {

@@ -103,9 +103,13 @@ class FiltresData extends IniData
     else { $sortie = false;}
     return $sortie;
   }  
-  /*
-  * selectionne un vieux $champ dans $table selon $nomcle qui vaut $valcle 
-  * se filtre permet des controles de donnees hors-contexte  
+  /* sélectionne un champ sql dans une  table selon une cle qui vaut valcle   
+	@param $champ string nom du-des champ(s)
+	@param $nomcle string nom de clé sql
+	@param $valcle integer valeur d'une clé
+	@param $stable string nom d'une table sql
+	@param $flag bool facultatif, détermine la valeur à retourner 
+	@return une valeur ($champ) si flag absent et requete sql succès, sinon un booleen 
   */
   public function getOld($champ,$nomcle,$valcle,$table,$flag=NULL)
   {
@@ -467,6 +471,17 @@ class FiltresData extends IniData
     elseif (! ($test =  filter_var($mail,FILTER_VALIDATE_EMAIL))) { return false; }
     else { return true; }
   }       
-    
+  /** Une methode qui teste le zip code belge
+	 	@param $zip integer le code postal a controler
+		@return booleen 
+	*/
+	public function testZip($zip)
+	{
+		$zipS = intval($zip);	
+		$retour = false;	
+		if (($zipS < 1000) || ($zipS > 9999)) { $retour = false; }
+		else ( $retour = true; } 
+		return $retour;
+	}  
   
 }

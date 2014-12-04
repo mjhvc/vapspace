@@ -15,8 +15,8 @@
     $rgxAdres = '[^-a-zA-Z0-9אגהיטךûפשןמח\s,_:\.\\\']';  
     $rgxMail = '^[[:alnum:]](?:[-_.]?[[:alnum:]])+_?@[[:alnum:]](?:[-.]?[[:alnum:]])+\.[a-z]{2,6}$';
     $rgxTel = '[^-a-z0-9/_\.\s]';    
-    //$rgxPass = '[^A-Za-z0-9אגיךטפצןמששûח]';
-     $rgxPass = '[*]';
+    $rgxPass = '[^-_A-Za-z0-9אגיךטפצןמששûח&@#§\!µ\^°]';
+     //$rgxPass = '[*]';
     $rgxMbr = '[^0-9a-zA-Z]';
     $rgxAlpha = '[^A-Za-z]';
     $rgxDate = '[^-0-9:]';

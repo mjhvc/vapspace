@@ -405,11 +405,14 @@ class Template
     return true;
   }
 
-  /** Méthode statique pour créer un champ <select> à partir
-   * d'une liste PHP
+  /** Méthode statique pour créer un champ <select> à partir d'une liste PHP
+	@param $nom string nom du formulaire
+	@param $liste array($val=>$libelle)
+	@param $defaut string name d'un formulaire option "selected"
+	@param $required bool si la ligne est requise  
    */
 
-  static function  champSelect ($nom, $liste, $defaut=NULL)
+  static function  champSelect ($nom, $liste, $defaut=NULL, $required=NULL)
   {
     $options = "";$id = $nom;
     foreach ($liste as $val => $libelle) {
@@ -424,7 +427,7 @@ class Template
          $options .= "<option value=\"$val\" selected=\"selected\">$libelle</option>\n";
       }
     }
-    return "<select name=\"$nom\" id=\"$id\">\n" . $options . "</select>\n";
+    return "<select name=\"$nom\" id=\"$id\" $required>\n" . $options . "</select>\n";
   }
 
 }

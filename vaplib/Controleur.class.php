@@ -191,12 +191,12 @@ class Controleur
   /** 
   * Appel statique encapsulé de Template::champSelect()
   */
-  protected function getSelect($nom, $liste, $defaut=NULL)
+  protected function getSelect($nom, $liste, $defaut=NULL, $required=NULL)
   {
     try {
       if(! is_array($liste)) { throw new MyPhpException('ControleurCtrl/getselect: parametre liste invalide'); }
-      if (!empty($defaut)){ $formu_select = Template::champSelect($nom, $liste, $defaut); }
-      else { $formu_select = Template::champSelect($nom, $liste); }
+      if (!empty($defaut)){ $formu_select = Template::champSelect($nom, $liste, $defaut,$required); }
+      else { $formu_select = Template::champSelect($nom, $liste,NULL,$required); }
     }
     catch(MyPhpException $e) {
       $msg = $e->getMessage();

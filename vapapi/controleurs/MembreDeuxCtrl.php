@@ -1,50 +1,32 @@
 <?php
-
-/******************************************************************************
-*    vapspace est un logiciel libre : vous pouvez le redistribuer ou le       *
-*    modifier selon les termes de la GNU General Public Licence tels que      *
-*    publiés par la Free Software Foundation : à votre choix, soit la         *
-*    version 3 de la licence, soit une version ultérieure quelle qu'elle      *
-*    soit.
-*
-*    vapspace est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE  *
-*    GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou       *
-*    D'ADÉQUATION À UNE UTILISATION PARTICULIÈRE. Pour plus de détails,       *
-*    reportez-vous à la GNU General Public License.                           *
-*
-*    Vous devez avoir reçu une copie de la GNU General Public License         *
-*    avec vapspace. Si ce n'est pas le cas, consultez                         *
-*    <http://www.gnu.org/licenses/>                                           *
-******************************************************************************** 
-*/
-
-/**
-* Class MembreDeuxCtrl, finalisation de la classe abstraite ABS_Membre 
-* avec gestion de liste antennes imbriquées dans liste de régions
-* @category VAP
-* @copyright Marc Van Craesbeeck, 2012
-* @license GPL
-* @package controleur
-* @version 1.0.0
-* @author marcvancraesbeeck@scarlet.be
+ 
+/** 
+	@class MembreCtrl 
+	@brief Finalisation de la classe abstraite ABS_Membre avec gestion de liste antennes imbriquées dans liste de régions
+	@copyright [GNU Public License](@ref licence.dox)
+	@author marcvancraesbeeck@scarlet.be
 */
 
 require('ABS_Membre.php');
 class MembreCtrl extends ABS_Membre
 {
-  /**
-  * controler() surcharge de parent::controler
-  * appel de parent::controler() puis fait des controles specifiques au contexte
-  * utilise $this->filtre : une instance de la classe FiltreData appellé dans parent
-  * utilise parent::changerFiltres()
-  * retourne $this->vue->retour
-  * prudence avec les elseif et des conditions toujours vraies...
+  /**  surcharge de parent::controler
+  appel de parent::controler() puis fait des controles specifiques au contexte
+  utilise $this->filtre : une instance de la classe FiltreData appellé dans parent
+  utilise parent::changerFiltres()
+  retourne $this->vue->retour
+  @param $tableau array les données à traiter
+	@param $lang string la langue de l'internaute
+	@return string $this->vue->retour, vide si pas d'erreurs, remplie sinon.   
   */ 
   protected function control($tableau,$lang) 
   {  
     try {     
       $this->vue->retour = $this->preCtrl($tableau);
-      if (empty($this->vue->retour)){         
+			if (! empty($this->vue->retour)) { 
+				$this->vue->retour = '<span style="color:red">'.$this->vue->retour.'</span>' ; 
+			}		
+      else {         
         $ramasseError = array(); 
         //$hidden permet d'inclure des formulaires 'cachez' dans la liste des formulaires attendus par $this->filtre->postInattendu($tableau)    
         $hidden = array('ppk','itoken');
@@ -75,8 +57,8 @@ class MembreCtrl extends ABS_Membre
           $this->filtreRegion = $this->changerFiltres('Region');
           if (! $this->filtreRegion->filtreClePPK($tableau['lienreg'])) {
             throw new MyPhpException("Membre phase deux: cle regionale d'inscription non valide");
-          }
-          elseif ($hiddenOblig = $this->filtre->filtreOblig($tableau,'nopass',$this->tableUn)) {  //Les donnees de phase Un doivent etre presentes
+          } //Les donnees de phase Un doivent etre présentes
+          elseif ($hiddenOblig = $this->filtre->filtreOblig($tableau,'nopass',$this->tableUn)) {  
             throw new MyPhpException("Membre Phase Deux: donnees incompletes");
           }
           elseif (($this->action == 'update') && ($tableau['itoken'] != $this->token)) {
@@ -116,7 +98,6 @@ class MembreCtrl extends ABS_Membre
           $ramasseError = array();
         }    
       }
-      else { $this->vue->retour = '<span style="color:red">'.$this->vue->retour.'</span>' ; } 
       return $this->vue->retour;
     }      
     catch(MyPhpException $e) {
@@ -124,12 +105,12 @@ class MembreCtrl extends ABS_Membre
       $e->alerte($msg);  
     }        
   }
-  /**
-  * Les operations de la vue pour la partie 1 du formulaire d'inscription
-  * @param $action: string, determine l'action sql qui sera effectuée 
-  * @param $valPPK: int, la cle PK qui identifie la ligne du membre
-  * @param $tableau: array, un tableau de donnee à transformer en entités de la vue
-  * fichier tpl appellés : inscrire_Membre-t.tpl, multi_Membre_ValPPK.tpl, pied.tpl
+  /** Les operations de la vue pour la partie 1 du formulaire d'inscription
+  @param $action string, determine l'action sql qui sera effectuée 
+  @param $valPPK int, la cle PK qui identifie la ligne du membre
+  @param $tableau array, un tableau de donnee à transformer en entités de la vue
+  fichier tpl appellés : inscrire_Membre-un.tpl, multi_Membre_ValPPK.tpl, pied.tpl
+	@return la commande pour afficher la page
   */
   private function vuePhaseUn($action,$valppk=NULL,$tableau=array()) //propre à un descendant
   {
@@ -176,19 +157,19 @@ class MembreCtrl extends ABS_Membre
     $out = $this->vue->render("page");
     return $out;
   }
-  /**
-  * Les operations de la vue pour la partie 2 du formulaire d'inscription
-  * @param $action: string, determine l'action sql qui sera effectuée 
-  * @param $valPPK: int, la cle PK qui identifie la ligne du membre
-  * @param $tableau: array, un tableau de donnee à transformer en entités de la vue
-  * @param $mode:string,  informe si le param $tableau est à 1D ou à 2D
-  * fichier tpl appellés : inscrire_Membre-deux.tpl, multi_Membre_ValPPK.tpl, pied.tpl + parent::vueStatut() + parent::vueStatique()
+  /** Les operations de la vue pour la partie 2 du formulaire d'inscription
+  @param $action string, determine l'action sql qui sera effectuée 
+  @param $valPPK int, la cle PK qui identifie la ligne du membre
+  @param $tableau array, un tableau de donnee à transformer en entités de la vue
+  @param $mode string,  informe si le param $tableau est à 1D ou à 2D
+  fichier tpl appellés : inscrire_Membre-deux.tpl, multi_Membre_ValPPK.tpl, pied.tpl + parent::vueStatut() + parent::vueStatique()
   */
-  private function vuePhaseDeux($action,$valPPK=NULL,$tableau=array(),$mode=NULL) //propre à un descendant
+  private function vuePhaseDeux($action,$valPPK=NULL,$tableau=array(),$mode=NULL)  
   { 
     $out = false;
     $this->globalEntities();
-    if (empty($mode)) { //On est avec un tableau extrait de la base en 2 dimmensions
+		//Si pas de $mode, on est avec un tableau extrait de la database en 2 dimmensions
+    if (empty($mode)) { 
       $clereg = $tableau[T_HUM]['lienreg']; 
       $cleant = $tableau[T_CORE]['lienant'];
     }
@@ -199,8 +180,9 @@ class MembreCtrl extends ABS_Membre
     $listeAntennes = $this->valeursPassive($this->idxPassif,$clereg);
     //rajouter éventuellement un 'hors-antenne' à chaque liste d'antenne, ce qui crée une antenne hors-antenne spécifique à chaque région 
     if ((!empty($this->o_ant)) && ($clereg != $this->o_reg)) { $listeAntennes[$this->o_ant] = $this->o_nomant; }                     
-    $this->vueStatut($this->statut);
-    $this->vueRecommand(); // appel (dans classe parente) du chargement de entite multiRecomm
+    // appel des entites statuts et multiRecomm via classe parente
+		$this->vueStatut($this->statut);    
+		$this->vueRecommand(); 
     if ($action == 'update') {
       $this->vue->choix_script = BASEURL."index.php?ctrl=membre&amp;action=update&amp;phase=deux";
       $this->vue->intro_passe =  PASS_UPDATE; 
@@ -218,9 +200,11 @@ class MembreCtrl extends ABS_Membre
     }
     if (! empty($tableau['confirmation'])) { $this->vue->confirmation = $tableau['confirmation']; }
     else { $this->vue->confirmation = ''; } 
-    if (empty($cleant)) { $this->vue->select = $this->getSelect($this->champPassif,$listeAntennes); }
-    else {  $this->vue->select = $this->getSelect($this->champPassif,$listeAntennes,$cleant); }
-    if ($action == 'inscription' || $mode == 'error') { $this->constructEntity($tableau);}
+		//Appel de entite select via methode getSelect()
+    if (empty($cleant)) { $this->vue->select = $this->getSelect($this->champPassif,$listeAntennes,NULL,'required'); }
+    else {  $this->vue->select = $this->getSelect($this->champPassif,$listeAntennes,$cleant,'required'); }
+		// Appel de la methode principale constructEntity    
+		if ($action == 'inscription' || $mode == 'error') { $this->constructEntity($tableau);}
     elseif ($action == 'update' && empty($mode)){ //$tableau est à 2D, sauf $tableau['inliaison']
       $maxStat = intval($tableau['inliaison']);   
       foreach ($this->tabTables as $table){        

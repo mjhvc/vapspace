@@ -1,35 +1,13 @@
 <?php
-
-/******************************************************************************
-*    vapspace est un logiciel libre : vous pouvez le redistribuer ou le       *
-*    modifier selon les termes de la GNU General Public Licence tels que      *
-*    publiés par la Free Software Foundation : à votre choix, soit la         *
-*    version 3 de la licence, soit une version ultérieure quelle qu'elle      *
-*    soit.
-*
-*    vapspace est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE  *
-*    GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou       *
-*    D'ADÉQUATION À UNE UTILISATION PARTICULIÈRE. Pour plus de détails,       *
-*    reportez-vous à la GNU General Public License.                           *
-*
-*    Vous devez avoir reçu une copie de la GNU General Public License         *
-*    avec vapspace. Si ce n'est pas le cas, consultez                         *
-*    <http://www.gnu.org/licenses/>                                           *
-******************************************************************************** 
-*/
-
-/**
-* Classe abstraite ABS_MembreCtrl, gère le Contexte Membre.ini 
-* tables dynamiques: T_HUM, T_CORE
-* table passive : T_ANT
-* table statique: T_SOC
-* table de liaison : T_HUM_SOC
-* @category vapspace
-* @copyright Marc Van Craesbeeck, 2011
-* @license GPL
-* @package controleur
-* @version 1.0.0
-* @author marcvancraesbeeck@scarlet.be
+ 
+/** Classe abstraite ABS_MembreCtrl, gère le Contexte Membre.ini 
+tables dynamiques: T_HUM, T_CORE
+table passive : T_ANT
+table statique: T_SOC
+table de liaison : T_HUM_SOC
+@copyright Marc Van Craesbeeck, 2011
+@license GPL
+@author marcvancraesbeeck@scarlet.be
 */
 
 include("Controleur.class.php");

@@ -125,11 +125,10 @@ class FiltresData extends IniData
     return $retour;
   }
 
-/**
-  * Filtre dns : verifie si le dns d'un mail est correct
-  * @param $mail, string, le mail a verifier
-  * retourne true: ok, false: ko verifier en aval
-  */
+/** Filtre dns : verifie si le dns d'un mail est correct
+  @param $mail string, le mail a verifier
+  @return   booleen
+*/
   public function filtreDns($mail)	 
   {
     $this->mail = $mail;  
@@ -139,8 +138,10 @@ class FiltresData extends IniData
   	else {return FALSE;}
   }
 
-/**
-  * Le filtre anti-spam du contexte Membre
+/** Le filtre anti-spam du contexte Membre
+  @param $valeur string valeur à tester
+  @param $lang string semble obsolète
+  @return booleen
   */
   public function antiSpam($valeur,$lang)
   {

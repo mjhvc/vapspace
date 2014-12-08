@@ -416,10 +416,6 @@ class Template
   {
     $options = "";$id = $nom;
     foreach ($liste as $val => $libelle) {
-      // Attention aux problèmes d'affichage
-      //$val = htmlSpecialChars($val);
-      //$defaut = htmlSpecialChars($defaut);
-
       if ($val != $defaut) {
         $options .=  "<option value=\"$val\">$libelle</option>\n";
       }
@@ -427,7 +423,7 @@ class Template
          $options .= "<option value=\"$val\" selected=\"selected\">$libelle</option>\n";
       }
     }
-    return "<select name=\"$nom\" id=\"$id\" $required>\n" . $options . "</select>\n";
+    return "<select name=\"$nom\" id=\"$id\" class=\"form-control\" $required >\n" . $options . "</select>\n";
   }
 
 }

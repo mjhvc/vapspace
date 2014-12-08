@@ -109,7 +109,7 @@ class FiltresData extends IniData
 	@param $valcle integer valeur d'une clé
 	@param $stable string nom d'une table sql
 	@param $flag bool facultatif, détermine la valeur à retourner 
-	@return une valeur ($champ) si flag absent et requete sql succès, sinon un booleen 
+	@return la valeur de $champ si flag absent et succès, sinon un booleen 
   */
   public function getOld($champ,$nomcle,$valcle,$table,$flag=NULL)
   {
@@ -151,10 +151,10 @@ class FiltresData extends IniData
     else { $filtre = false;}
     return $filtre;
   }
- /**
-  * @param: $num (int) est la valeur de la ppk d'un contexte
-  * ppk est la PK de la premiere table dynamique du contexte
-  * @param $altcont : string facultatif si une ppk est à vérifier dans un autre contexte 
+ /** contrôle de la validité d'une clé sql
+  utilise methode getPPK()
+	@param: $num (int) est la valeur de la ppk d'un contexte
+  @return booleen
   */
   public function filtreClePPK($num)
   {
@@ -171,12 +171,14 @@ class FiltresData extends IniData
 	  else {	return false; }
   } 
   
-  //une fonction pour 'matcher' un courriel
+  /** une  pour 'matcher' un courriel 
+	Cette methode n'est plus employée
+	Regex copiée selon: http://www.expreg.com/expreg_article.php?art=verifmail
+	@param $mail string le mail à filtrer
+	@return booleen
+	*/
   public function filtreNonMail($mail)
   {
-	  //la regex qui suit reconnait un courriel, sa fonction est non filtrante ...
-			//la regex vient de :http://www.expreg.com/expreg_article.php?art=verifmail
-			//alternative: ($valmail = preg_match_all('#[^a-zA-Z0-9@_.-]#',$tableau['mail'],$match))  
 	  $match = array();
 	  if (! preg_match('#^[[:alnum:]](?:[-_.]?[[:alnum:]])+_?@[[:alnum:]](?:[-.]?[[:alnum:]])+\.[a-z]{2,6}$#',$mail,$match))
 	  { return TRUE;}
@@ -184,20 +186,25 @@ class FiltresData extends IniData
 	  { return FALSE;}	
   }
 
-/**  
-* filtre le format des dates pour MYSQL (aaaa-mm-dd)
+/** double filtrage du format des dates pour MYSQL (aaaa-mm-dd)
+		filtre par regex et filtre par checkdate(mm,dd,aaaa)
+		@param $date string la date à filtrer
+		@return un integer comme valeur booleenne (O ou 1 ou 2)
 */
   public function filtreDate($date)
   {
     $masque_date = '#^\d{4}-\d{2}-\d{2}$#';     
     $tabdate = explode('-',$date);
-    $errDate='';        
+    $errDate = 0 ;        
     if (! preg_match($masque_date,$date)){  $errDate = 1; }
     elseif (! checkdate($tabdate[1],$tabdate[2],$tabdate[0])){ $errDate = 2;}
     return $errDate;
   }
-   /**
-  * Filtre simple de date naissance
+  /** Filtre simple de date naissance
+		@param $an integer l'année de naissance
+		@param $min integer seuil minima
+		@param $max seuil maxima
+		@return booleen 
   */
   public function naissance($an,$min=1912,$max=2000)
   {

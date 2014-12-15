@@ -4,7 +4,6 @@
 @class FiltresData 
 @brief la classe des filtres à appeler dans le cadre d'un contexte précis.
 	 
-
 [vers le descripteur des contextes] (@ref  descripteursContexte.dox) 
 @author marcvancraesbeck@scarlet.be
 @copyright [GNU Public License](@ref licence.dox)

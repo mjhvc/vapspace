@@ -26,10 +26,7 @@ class FiltresData extends IniData
   */
   function __construct($contexte=NULL,$statut=NULL)
   {
-    //initialisation des champs à ne pas filtrer
-    $this->formatMail = array('mail','chatmail','expediteur','commanditaire');
-    
-    //appel le constructeur parent avec ses parametres
+   //appel le constructeur parent avec ses parametres
     if ($contexte != NULL && $statut != NULL) {
       parent::__construct($contexte,$statut); 
     } 
@@ -215,20 +212,25 @@ class FiltresData extends IniData
     }
     return $sortie;
   } 
-/**
-  * Filtre Masque, la fonction qui :
-  * matche tous les masques fournis en parametre ($tableau)
-  * retourne un tableau this->erreurMasque[attribut] = string:les caracteres interdits de masques détectés.  
-  * ce tableau est vide si pas d'erreurs.  
+/** matche toutes les valeurs clientes fournies par $tableau via 
+  2 boucles: 
+
+  - une boucle sur chaque table sql via parent::chargertable(), matche la valeurs du champ sql client selon les masques regex fourni par le contexte de table
+  - une boucle sur parent::dataContexte() pour détecter l'usage de paramètres 'statiques' et agir selon les masques regex fourni par le contexte général
+    
+    @param $tableau array $tableau[champ]=valeurclient du champ
+    @return array  this->erreurMasque[attribut] = les caractères interdits de masques détectés
+   
   */
   public function filtreMasques($tableau)
   {    
-    // appelle filtreCarMasq() pour supprimer tout caractère invisible 
-    $this->filtreCarMasq($tableau);
-    //print_r($tableau);
     $drapstat = 0; $masque = array();
-    //3 champs  font exeption au filtre (table: _vap_chat, _vap_news) 
+    //initialisation des champs sql à filtrer avec la methode filter_var
+    $this->formatMail = array('mail','chatmail','expediteur','commanditaire');
+    //3 champs  font exeption aux filtres (table: _vap_chat, _vap_news) 
     $valeursExepte = array('message','contenu','altcontenu');  
+    // appelle filtreCarMasq() pour supprimer tout caractère invisible 
+    $this->filtreCarMasq($tableau);    
     //Boucle sur toutes les tables dynamiques du contexte($this->tablesdyn vient de $this->chargerContexte)  
     foreach ($this->dynTables as $nom)
     {
@@ -238,14 +240,15 @@ class FiltresData extends IniData
       //appel attributsTable (IniData) qui charge un tableau simple avec le nom des attributs attendus dynamiques-oblig et facul-  
       $this->attributsAttendus  = $this->attributsTable($nom);
  
-      foreach ($this->attributsAttendus as $x=>$valeur){ //Boucle sur les attributs oblig et facul
-        if (!empty($tableau[$valeur])) {  //certains attributs sont facul 
-          if ($masque = strval($this->tableData[$valeur]['masque'])){   //echo $valeur.' : '.$masque.'<br />' ;
+      foreach ($this->attributsAttendus as $x=>$valeur){  
+        //certains attributs sont facul 
+        if (!empty($tableau[$valeur])) {  
+          if ($masque = strval($this->tableData[$valeur]['masque'])){    
             $attribut = strval($tableau[$valeur]); 
-            if (! in_array($valeur,$valeursExepte)){  //pas de filtre pour ces valeurs
+            if (! in_array($valeur,$valeursExepte)){   
               if (in_array($valeur,$this->formatMail)){
-                if ( $attribut != MBR_NOMAIL) { //eluder ce filtre pour les sans mails  
-                  if (! $email = filter_var($attribut,FILTER_VALIDATE_EMAIL)) { //if ($ko = $this->filtreNonMail($attribut))
+                if ( $attribut != MBR_NOMAIL) {   
+                  if (! $email = filter_var($attribut,FILTER_VALIDATE_EMAIL)) {  
                     $this->erreurMasque[$valeur] = 'nomail';
                   }
                 }
@@ -258,9 +261,8 @@ class FiltresData extends IniData
           }
         }
       }
-    }    
-    foreach ($this->dataContexte as $cont=>$opt) { //Boucle 2   : sur toutes les donnees  du contexte
-      //Le contexte peut-il contenir des donnees statiques ?      
+    }   //Boucle 2   : sur toutes les donnees  du contexte 
+    foreach ($this->dataContexte as $cont=>$opt) {  //Le contexte peut-il contenir des donnees statiques ?   
       if (!empty($opt['data'])) { $drapstat++ ; }
     }
     if ($drapstat > 0){
@@ -279,9 +281,10 @@ class FiltresData extends IniData
     return $this->erreurMasque ;
   }
 
-/**
-  * Un filtre de taille de donnees
-  * retourne un tableau vide ou remplis par attribut
+/** Un filtre de taille de donnees qui retourne un tableau vide ou remplis par attribut
+    @param $tableau array $tableau[champ]=valeurclient du champ
+    @return array
+  
   */
   public function filtreTaille($tableau)
   {
@@ -290,14 +293,13 @@ class FiltresData extends IniData
     foreach ($this->dynTables as $nom)
     {
       // appel chargerTable (IniData) qui charge les proprietes de la table selon le contexte fourni      
-      $this->tableData = $this->chargerTable($nom);//cette fonction gere aussi 'PasDeMail'...A VERIFIER
+      $this->tableData = $this->chargerTable($nom); 
       
-      //appel attributsTable (IniData) qui 
-      //charge un tableau simple avec le nom des attributs attendus dynamiques-oblig et facul-  
+      //appel attributsTable (IniData) qui charge un tableau simple avec le nom des attributs attendus dynamiques-oblig et facul-  
       $this->attributsAttendus  = $this->attributsTable($nom);
       foreach ($this->attributsAttendus as $valeur){    //Boucle sur les attributs oblig et facul
         if (!empty($tableau[$valeur])) {    //certains attributs sont facul
-          $taille = $this->tableData[$valeur]['longueur']; //$this->dataContexte[$valeur]['longueur'];
+          $taille = $this->tableData[$valeur]['longueur'];  
           if (strlen($tableau[$valeur]) > $taille) {
             $this->erreurTaille[$valeur] = $taille ;
           }

@@ -147,9 +147,8 @@ class FiltresData extends IniData
     else { $filtre = false;}
     return $filtre;
   }
- /** contrôle de la validité d'une clé sql
-  utilise methode getPPK()
-	@param: $num (int) est la valeur de la ppk d'un contexte
+ /** contrôle de la validité d'une clé sql, utilise methode getPPK()
+	@param $num (int) est la valeur de la ppk d'un contexte
   @return booleen
   */
   public function filtreClePPK($num)
@@ -326,7 +325,7 @@ class FiltresData extends IniData
     utilise parent::dataOblig parent::attributOblig()
     @param $tableau array  les données à filtrer
     @param $flag string facul, permet de sauter le filtre sur passe
-    $param $table string facul, nom d'une table sur laquelle limiter le travail 
+    @param $table string facul, nom d'une table sur laquelle limiter le travail 
    @return une chaine vide ou remplie des parametres manquants
   */
   public function filtreOblig($tableau,$flag=NULL,$table=NULL)
@@ -391,7 +390,7 @@ class FiltresData extends IniData
   /** verifie que le nom des données est bien attendu
     @param $tableau array le tableau des données
     @param $hidden array facul un tableau de valeurs supplémentaires à chercher
-    @retrun string (succès) booleen echec
+    @return string (succès) booleen echec
   */
   public function postInattendu($tableau,$hidden=array())
   {

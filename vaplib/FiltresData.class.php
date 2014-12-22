@@ -371,9 +371,11 @@ class FiltresData extends IniData
     elseif ($compt > $max) { $this->erreurOblig = 'Seulement un seul choix parmis les noeuds de proximité, merci'; }
     return $this->erreurOblig;
   }
-  /**
-  * Une methode qui teste l'absence totale de donnees attendues
+  /** teste l'absence totale de donnees attendues
+    @param $tableau array le tableau des données à filtrer
+    @return booleen
   */
+  
   public function filtreVacuum($tableau)
   {
     $ensembleDonnees = array_merge($this->dataOblig,$this->dataFacul);
@@ -386,8 +388,10 @@ class FiltresData extends IniData
     if ($x == 0) {  return true;}
     else  { return false;}  
   }
-  /**
-  * Une fonction de controle qui verifie que le nom des données est bien attendu
+  /** verifie que le nom des données est bien attendu
+    @param $tableau array le tableau des données
+    @param $hidden array facul un tableau de valeurs supplémentaires à chercher
+    @retrun string (succès) booleen echec
   */
   public function postInattendu($tableau,$hidden=array())
   {
@@ -400,9 +404,11 @@ class FiltresData extends IniData
     }
     return $retour;
   }
-/**
-*   selectionne la plus grande PK d'une table
-*/
+  /** selectionne la plus grande valeur d'une PK de table sql
+    @param $cle integer la clé à sélectionner
+    @param $table string la table à sélectionner
+    @return integer, la valeur maximale de cette clé
+  */
   public function calculKeyMax($cle,$table)
   {
     $sql = "SELECT MAX($cle) AS maxi FROM $table ";
@@ -411,10 +417,11 @@ class FiltresData extends IniData
     $stmt == NULL;
     return $rsps['maxi'];
   }
-/**
-*   selectionne une PK de T_CORE si cette PK est bien liée à T_CORE.'lienant'
-*   @return : idhum ou false
-*/  
+  /** selectionne une PK de T_CORE selon un paramètre supplémentaire la clé d'une antenne
+    @param $cle integer la valeur de Pk à vérifier
+    @param $cleant integer la valeur de la clé d'antenne    
+    @return  integer (la clé) succes  ou booléen (false)
+  */  
   public function mbrInAnt($cle,$cleant)
   {
     $sql = "SELECT idvap FROM ".T_CORE." WHERE idvap = :cle AND lienant = :lienant";
@@ -427,10 +434,10 @@ class FiltresData extends IniData
     else { $rsps = $cle; }
     return $rsps;
   }  
-/**
-*   selection d'une region en fonction d'une cle d'antenne
-*   cette methode et la précédente pourrait migrer dans GererData.class.php sous forme plus automtisée....
-*/  
+  /** selection d'une region en fonction d'une cle d'antenne
+  @param $lienant integer valeur de la clé PK idant
+  @return integer la valeur de lienreg ou false 
+  */  
   public function selectreg($lienant)
   {
     $sql = "SELECT lienreg FROM ".T_ANT." WHERE idant=:reg";
@@ -442,11 +449,10 @@ class FiltresData extends IniData
     else { $rsps = $rslt['lienreg']; }
     return $rsps;
   } 
-  /**
-  * methode verifmail($mail,$statut)
-  * Vérifie si le mail appartient bien à quelqu'un en base
-  * @param $mail: string, le mail à vérifier
-  * @param $statut: string, le statut du mail à vérifier
+  /** Vérifie si le mail appartient bien à quelqu'un en base
+  @param $mail string, le mail à vérifier
+  @return booleen
+  
   */
   public function verifmail($mail)
   {
@@ -459,9 +465,8 @@ class FiltresData extends IniData
 	  else { $end = false; }
     return $end;
   }
-   /**
-  * Compte les news actives et renvoi true-false
-  * devrait peut-etre migrer dans FiltresData.class.php
+   /** Compte les news actives et renvoi une adresse mail ou false
+    @return string une adresse mail (succès) ou false (échec)
   */ 
   public function lockMoulin()
   {
@@ -472,8 +477,9 @@ class FiltresData extends IniData
     else { $retour = false ; }
     return $retour;
   }
-   /**
-  * Une fonction qui matche vite un mail (utiliser par inscrire)
+   /** matche vite un mail, utilisé par membre::inscrire et membre::promo
+    @param $mail string un mail à matcher
+    @return booleen
   */
   public function matchMail($mail)
   { 

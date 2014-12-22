@@ -322,10 +322,12 @@ class FiltresData extends IniData
     return $this->erreurTaille;
   }
 
-/**
-  * Filtre la presence des elements requis(obligatoires) d'un contexte.
-  * @param $tableau : array, les données à filtrer
-  * retourne une chaine vide ou remplie des parametres manquants
+/** Filtre la presence des elements requis(obligatoires) d'une table ou d'un contexte.
+    utilise parent::dataOblig parent::attributOblig()
+    @param $tableau array  les données à filtrer
+    @param $flag string facul, permet de sauter le filtre sur passe
+    $param $table string facul, nom d'une table sur laquelle limiter le travail 
+   @return une chaine vide ou remplie des parametres manquants
   */
   public function filtreOblig($tableau,$flag=NULL,$table=NULL)
   {
@@ -340,8 +342,8 @@ class FiltresData extends IniData
       array_splice($dataOblig,$idxpass,1);
     }
     foreach ($dataOblig as $val){ 
-      if (($val == 'idpere') && ($tableau[$val] == 0)) { $back = 1; } //if (isset($tableau[$val]) && ($tableau[$val] === 0 || $tableau[$val] === '0')) { $back = 1; }     
-      elseif(empty($tableau[$val]) || trim($tableau[$val]) == '') //if ((!array_key_exists($val,$tableau)) || is_null($tableau[$val]))
+      if (($val == 'idpere') && ($tableau[$val] == 0)) { $back = 1; }       
+      elseif(empty($tableau[$val]) || trim($tableau[$val]) == '')  
       {
         $back = 0; 
         $corrige[] = $val;
@@ -354,11 +356,10 @@ class FiltresData extends IniData
     else { $this->erreurOblig = '';}
     return $this->erreurOblig;
   }
-  /**
-  * Filtre ObligAlterna: verifie que un nombre precis de champs parmis une liste est present
-  * @param $tabUn: array(), le tableau de toutes les donnees en entrée
-  * @param $faculA: array(), la liste des champs en alternace
-  * @param $max: int, le nombre de champs en alternance possible
+  /** n'est plus utilisée vérifie que un nombre precis de champs parmis une liste est present
+  @param $tabUn array le tableau de toutes les donnees en entrée
+  @param $faculA array la liste des champs en alternace
+  @param $max: int, le nombre de champs en alternance possible
   */
   public function ObligAlterne($tabUn,$faculA,$max)  
   {

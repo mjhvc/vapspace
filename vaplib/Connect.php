@@ -1,51 +1,29 @@
 <?php
-/******************************************************************************
-* vapspace est un logiciel libre : vous pouvez le redistribuer ou le *
-* modifier selon les termes de la GNU General Public Licence tels que *
-* publiés par la Free Software Foundation : à votre choix, soit la *
-* version 3 de la licence, soit une version ultérieure quelle qu'elle *
-* soit.
-*
-* vapspace est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE *
-* GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou *
-* D'ADÉQUATION À UNE UTILISATION PARTICULIÈRE. Pour plus de détails, *
-* reportez-vous à la GNU General Public License. *
-*
-* Vous devez avoir reçu une copie de la GNU General Public License *
-* avec vapspace. Si ce n'est pas le cas, consultez *
-* <http://www.gnu.org/licenses/> *
-********************************************************************************
-*/
-
+  
 /**
-* Fichier Connect.php : gestion des constantes pour tout le programme vapspace
-* @category vapspace
-* @copyright Marc Van Craesbeeck, 2011
-* @license GPL
-* @package vaplib
-* @version 1.0.0
+* @file Connect.php 
+* @brief Définir les constantes pour tout le programme vapspace
+* 
 * @author marcvancraesbeeck@scarlet.be
+* @copyright [GNU Public License](@ref licence.dox)
 */
 
-  /**
-* Gestion des erreurs
-*/
+/** Gérer l'affichage et la journalisation des erreurs ou non. */
   define ('DISPLAYERRORS','off');
   define ('LOGERRORS','on');
    
-  /**
-* DROITS
-*/
+/** 4 DROITS à définir. */
   define ('ANONYM',0x01);
   define ('MEMBRE',0x02);
   define ('RESPONSABLE',0x04);
   define ('ADMIN',0x08);
-
   
-  /**
-* BASEDIR, BASEPATH,BASEURL selon locale ou hébergeur, 3 constantes de base
-* à personnaliser si installation locale
-*/
+  /** BASEDIR, BASEPATH,BASEURL 3 constantes de base à personnaliser si installation locale. 
+
+    BASEURL : constante qui fixe l'url du repertoire accessible au navigateur internet
+    BASEDIR:  constante qui fixe l'adresse physique du répertoire accessible au navigateur internet
+    BASEPATH : constante qui fixe l'adresse physique du répertoire racine, un parent de BASEDIR
+  */
   if ($_SERVER["SERVER_NAME"] == 'localhost'){
          $baseurl = 'http://'.$_SERVER['SERVER_NAME'].'/vaptest/vapspace/';
     $basedir = $_SERVER['DOCUMENT_ROOT'].'/'.'vaptest'.'/'.'vapspace'.'/';
@@ -59,61 +37,64 @@
   define ('BASEURL',"$baseurl");
   define('BASEDIR',"$basedir");
   define('BASEPATH',"$path");
-  /**
-* Les constantes basées sur BASEDIR, BASEPATH,BASEURL
+
+/** Les constantes basées sur BASEDIR, BASEPATH,BASEURL 
+  
+    - basées sur les répertoires: 
+      + vapdata: un repertoire general lié aux caches du Modèle et à sa structure de contextes.
+      + vaplib: forme un reperoitre contenant les scripts du MODELE
+      + vapapi: repertoire contenant les scripts liées aux controleurs, à la vue, aux fonctions statiques
+      + vaptmp: repertoire pour données temporaires (log, données de session, cache liées aux antennes) 
+     
 */
-  $dirData = BASEPATH.'vapdata'.'/';
-  $dirtable = BASEPATH.'vapdata'.'/'.'tables'.'/';
-  $dircontexte = BASEPATH.'vapdata'.'/'.'contextes'.'/';
-  $dircartes = BASEPATH.'vapdata'.'/'.'xml'.'/';
-  $dirextra = BASEPATH.'vapdata'.'/'.'extra'.'/';
-  $dirLib = BASEPATH.'vaplib'.'/';
-  $dirlang = BASEPATH.'vaplib'.'/'.'langues'.'/';
-  
-  $log = BASEPATH.'vaptmp'.'/'.'vap.log';
-  $session = BASEPATH.'vaptmp'.'/'.'session'.'/';
-  $cache = BASEPATH.'vaptmp'.'/'.'cache'.'/';
-  $anten = BASEPATH.'vaptmp'.'/'.'cache'.'/'.'antennes'.'/';
- 
-  $dirappli = BASEPATH.'vapapi'.'/';
-  $dircontrl = BASEPATH.'vapapi'.'/'.'controleurs'.'/';
-  $dirfunc = BASEPATH.'vapapi'.'/'.'fonctions'.'/';
-  
-  
-  $dirpub = BASEDIR;
-  $dirjs = BASEDIR.'js'.'/';
-  $dircss = BASEDIR.'css'.'/';
-  $dirimg = BASEDIR.'photos'.'/';
-  $path_mini = BASEDIR.'photos'.'/'.'mini'.'/';
-  $urlimg = BASEURL.'photos/';
-  $url_mini = BASEURL.'photos/mini/';
- 
-  define('DIRLIB',"$dirLib");
+  $dirData = BASEPATH.'vapdata'.'/';                      
   define ('DIRDATA',"$dirData");
-  define ('DIRTABLE',"$dirtable");
-  define ('DIRCONTEXTE',"$dircontexte");
-  define ('DIRCARTES',"$dircartes");
-  define ('DIREXTRA',"$dirextra");
+  $dirtable = BASEPATH.'vapdata'.'/'.'tables'.'/';
+  define ('DIRTABLE',"$dirtable");  
+  $dircontexte = BASEPATH.'vapdata'.'/'.'contextes'.'/';
+  define ('DIRCONTEXTE',"$dircontexte");  
+  $dircartes = BASEPATH.'vapdata'.'/'.'xml'.'/';
+  define ('DIRCARTES',"$dircartes");  
+  $dirextra = BASEPATH.'vapdata'.'/'.'extra'.'/';
+  define ('DIREXTRA',"$dirextra");  
   
-  define ('BASELOG',"$log");
-  define ('SESSION',"$session");
-  define ('DIRCACHE',"$cache");
-  define ('DIRCACHANT',"$anten");
-   
-  define('DIRAPPLIC',"$dirappli");
-  define('DIRCONTL',"$dircontrl");
+  $dirLib = BASEPATH.'vaplib'.'/';                        
+  define('DIRLIB',"$dirLib");
+  $dirlang = BASEPATH.'vaplib'.'/'.'langues'.'/';
   define('DIRLANG',"$dirlang");
+
+  $log = BASEPATH.'vaptmp'.'/'.'vap.log';
+  define ('BASELOG',"$log");  
+  $session = BASEPATH.'vaptmp'.'/'.'session'.'/';
+  define ('SESSION',"$session");  
+  $cache = BASEPATH.'vaptmp'.'/'.'cache'.'/';
+  define ('DIRCACHE',"$cache");  
+  $anten = BASEPATH.'vaptmp'.'/'.'cache'.'/'.'antennes'.'/';
+  define ('DIRCACHANT',"$anten");
+
+  $dirappli = BASEPATH.'vapapi'.'/';
+  define('DIRAPPLIC',"$dirappli");  
+  $dircontrl = BASEPATH.'vapapi'.'/'.'controleurs'.'/';
+  define('DIRCONTL',"$dircontrl");  
+  $dirfunc = BASEPATH.'vapapi'.'/'.'fonctions'.'/';
   define('DIRFUNC',"$dirfunc");
   
-  define('DIRPUBLIC',"$dirpub");
-  define('DIRJS',"$dirjs");
-  define('DIRCSS',"$dircss");
-  define('DIRIMG',"$dirimg");
-  define('URLIMG',"$urlimg");
-  
+  $dirpub = BASEDIR;
+  define('DIRPUBLIC',"$dirpub"); 
+  $dirjs = BASEDIR.'js'.'/';
+  define('DIRJS',"$dirjs");  
+  $dircss = BASEDIR.'css'.'/';
+  define('DIRCSS',"$dircss");  
+  $dirimg = BASEDIR.'photos'.'/';
+  define('DIRIMG',"$dirimg");  
+  $path_mini = BASEDIR.'photos'.'/'.'mini'.'/';
+  $urlimg = BASEURL.'photos/';
+  define('URLIMG',"$urlimg");  
+  $url_mini = BASEURL.'photos/mini/';
+ 
   $path_file = DIRDATA.'upload'.'/';
   
-// Path pour le centre de telechargement
+  // Path pour le centre de telechargement
   define('FILEPATH',"$path_file");
   define('MINIPATH',"$path_mini");
   define('MINIURL',"$url_mini");
@@ -121,9 +102,7 @@
   //Nombre de lignes à afficher:
   define ('TAILLE',50);
     
-  /**
-* TABLES et MAILWM sont ecrits à l'installation
-*/
+  /** TABLES et MAILWM sont écrits durant à l'installation */
    
   
  

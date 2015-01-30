@@ -1,71 +1,43 @@
 <?php
 /**
- * @category webscope
- * @package    Template
- * @copyright Philippe Rigaux
- * @license GPL
- * Sources: http://www.lamsade.dauphine.fr/rigaux/mysqlphp/?page=code 
- */
-
-
-/**
- * Une classe implantant un moteur de templates semblable
- * à celui de la PHPLIB.
- *
+ @class    Template
+ @autor  Philippe Rigaux
+ @copyright [GNU Public License](@ref licence.dox) 
+ @brief Une classe implantant un moteur de templates semblable à celui de la PHPLIB.
  */
 
 class Template
 {
   private $classname = "Template";
-  /* if set, echo assignments */
-  private $debug     = false;
-
-  /* relative filenames are relative to this pathname */
-  private $root   = "";
-
-  // Get the files from the following path
-  private $path = "";
-
-  /* $varkeys[key] = "key"; $varvals[key] = "value"; */
-  private $varkeys = array();
-  private $varvals = array();
+  private $debug     = false;   /**< if set, echo assignments */
+  private $root   = "";         /**< relative filenames are relative to this pathname */
+  private $path = "";           /**< Get the files from the following path */
+  private $varkeys = array();   /**< $varkeys[key] = "key"; */
+  private $varvals = array();   /**<$varvals[key] = "value"; */
   private $file = array();
+  private $unknowns = "remove"; /**< "remove"  => remove undefined variables; "comment" => replace undefined variables with comments; "keep"=> keep undefined variables */
+  private $halt_on_error  = "yes";/**< "yes" => halt, "report" => report error, continue, "no" => ignore error quietly */
+  private $last_error     = ""; /**< last error message is retained here */
 
-  /* "remove"  => remove undefined variables
-   * "comment" => replace undefined variables with comments
-   * "keep"    => keep undefined variables
-   */
-  private $unknowns = "remove";
-
-  /* "yes" => halt, "report" => report error, continue, "no" => ignore error quietly */
-  private $halt_on_error  = "yes";
-
-  /* last error message is retained here */
-  private $last_error     = "";
-
-  /**
-   * Constructor
-   *
-   * @param string $tmplPath
-   * @param array $extraParams
-   */
+  /** Constructor
+  @param $tmplPath string 
+  @param $extraParams array 
+  */
   public function __construct($tmplPath = null, $extraParams = array())
   {
     if (null !== $tmplPath) {
       $this->setScriptPath($tmplPath);
     }
-
     foreach ($extraParams as $key => $value) {
       $this->set_var($key, $value);
     }
   }
 
-  /**
-   * Set the path to the templates
-   *
-   * @param string $path The directory to set as the path.
-   * @return void
-   */
+  /** Set the path to the templates.
+   
+  @param  $path string The directory to set as the path.
+  @return void
+  */
   public function setScriptPath($path)
   {
     $this->path = $path;
@@ -74,23 +46,21 @@ class Template
     }
   }
 
-  /**
-   * Retrieve the current template directory as an array
-   *
-   * @return array(string)
-   */
+  /** Retrieve the current template directory as an array.
+   
+  @return array  
+  */
   public function getScriptPaths()
   {
     return array($this->path);
   }
 
 
-  /* public: set_file(array $filelist)
+  /**  
    * @filelist: array of handle, filename pairs.
    *
-   * public: set_file(string $handle, string $filename)
-   * @handle: handle for a filename,
-   * @filename: name of template file
+   * @param $handle can be a array of a string handle for a filename,
+   * @param $filename string : name of template file
    */
   public function setFile($handle, $filename = "",$final=null) {
     if (!is_array($handle)) {
@@ -99,12 +69,14 @@ class Template
         return false;
       }
       $this->file[$handle] = $this->filename($filename);
+
       // Load the file now: this allows to load the file content
       // as en entity. Downside: maybe be not efficient at all
       // is setFile is called for files that are no used at the end ..
       if (!empty($final)){$this->loadFile($handle,$final);}
       else { $this->loadFile($handle);}
-    } else {
+    } 
+    else {
       reset($handle);
       while(list($h, $f) = each($handle)) {
         $this->file[$h] = $this->filename($f);
@@ -341,9 +313,10 @@ class Template
     return preg_quote("{".$varname."}");
   }
 
-  /***************************************************************************/
-  /* private: filename($filename)
-   * @filename: name to be completed.
+  /** 
+   @brief private: filename($filename)
+   @param $filename string name to be completed.
+   @return string FQName of the file
    */
   private function filename($filename) {
     if (substr($filename, 0, 1) != "/") {

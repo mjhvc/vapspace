@@ -1,49 +1,33 @@
 <?php
 
-/******************************************************************************
-*    vapspace est un logiciel libre : vous pouvez le redistribuer ou le       *
-*    modifier selon les termes de la GNU General Public Licence tels que      *
-*    publiés par la Free Software Foundation : à votre choix, soit la         *
-*    version 3 de la licence, soit une version ultérieure quelle qu'elle      *
-*    soit.
-*
-*    vapspace est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE  *
-*    GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou       *
-*    D'ADÉQUATION À UNE UTILISATION PARTICULIÈRE. Pour plus de détails,       *
-*    reportez-vous à la GNU General Public License.                           *
-*
-*    Vous devez avoir reçu une copie de la GNU General Public License         *
-*    avec vapspace. Si ce n'est pas le cas, consultez                         *
-*    <http://www.gnu.org/licenses/>                                           *
-******************************************************************************** 
-*/
+/** 
+	@class AuthCtrl
+	@brief Gestion de l'identification à l'application via table sql: T_HUM 
 
-/**
-* class AuthCtrl : Gestion de l'identification table: T_HUM
-* @category vapspace
-* @copyright Marc Van Craesbeeck, 2011
-* @license GPL
-* @package controleur
-* @version 1.0.0
-* @author marcvancraesbeeck@scarlet.be
+	- Fichiers utilisés par la Vue :
+		+ squelette.tpl
+		+ stdt_connect.tpl
+		+ pied.tpl 
+	
+	@author marcvancraesbeck@scarlet.be
+	@copyright [GNU Public License](@ref licence.dox)
 */
 
 include("Controleur.class.php");
 
 class AuthCtrl extends Controleur
 { 
-  private $contexte;
-  private $tabTables = array();
-  private $table;
-  private $dataContexte;
-  private $back;
-  private $statut;
-  private $droits;
+  private $contexte;                /**< string nom du contexte*/
+  private $tabTables = array();     /**< array le tableau avec le nom de(s) tables sql utilisées */
+  private $table;                   /**< string nom de la table sql principale du contexte */
+  private $dataContexte = array();  /**< array vide */
+  private $back;                    /**< string message html d'erreur du contexte */
+  private $statut;                  /**< string le nom du statut */
+  private $droits;                  /**< integer codage simple du droit de l'utilisateur */
   public function __construct()
   {
     $this->contexte = "Auth";
     parent::__construct($this->contexte);   
-    $this->dataContexte = array();
     $this->statut = $this->getStatut(); 
     $this->droits = $this->getDroits(); 
     $this->tabTables = $this->modele->getTables();
@@ -122,8 +106,8 @@ class AuthCtrl extends Controleur
     $url_subscribe = BASEURL."index.php?ctrl=membre&amp;action=inscrire".$strLang ;
     $url_help = BASEURL."index.php?ctrl=help";
     $this->constructEntity();
-    $this->vue->hreFR = BASEURL."index.php?ctrl=auth&lang=fr";
-    $this->vue->hreNL  = BASEURL."index.php?ctrl=auth&lang=nl";
+    $this->vue->hreFR = BASEURL."index.php?ctrl=auth&amp;lang=fr";
+    $this->vue->hreNL  = BASEURL."index.php?ctrl=auth&amp;lang=nl";
     $this->vue->setFile("contenu","stdt_connect.tpl");
     $this->vue->pied = '<p class="piedleft"><a href="'.$url_subscribe.'">'.AUTH_SUBSCRIBE.'</a></p>'.
                          '<p class="piedleft"><a href="'.$url_help.'">'.AUTH_HELP.'</a></p>';

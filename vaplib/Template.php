@@ -1,10 +1,10 @@
 <?php
 /**
- @class    Template
- @autor  Philippe Rigaux
- @copyright [GNU Public License](@ref licence.dox) 
- @brief Une classe implantant un moteur de templates semblable à celui de la PHPLIB.
- */
+  @class  Template
+  @autor  Philippe Rigaux
+  @copyright [GNU Public License](@ref licence.dox) 
+  @brief Une classe implantant un moteur de templates semblable à celui de la PHPLIB.
+*/
 
 class Template
 {
@@ -12,6 +12,7 @@ class Template
   private $debug     = false;   /**< if set, echo assignments */
   private $root   = "";         /**< relative filenames are relative to this pathname */
   private $path = "";           /**< Get the files from the following path */
+  private $target ='';
   private $varkeys = array();   /**< $varkeys[key] = "key"; */
   private $varvals = array();   /**<$varvals[key] = "value"; */
   private $file = array();
@@ -20,27 +21,26 @@ class Template
   private $last_error     = ""; /**< last error message is retained here */
 
   /** Constructeur, charge un repertoire de fichiers template par (@ref setScriptPath($path))
-  @param $tmplPath string, chemin d'u repertoire de templates
-  @param $extraParams array 
+    @param $tmplPath string, chemin d'u repertoire de templates
+    @param $extraParams array 
   */
   public function __construct($tmplPath = null, $extraParams = array())
   {
-    if (null !== $tmplPath) {
-      $this->setScriptPath($tmplPath);
+    if (null !== $tmplPath) { 
+      $this->setScriptPath($tmplPath); 
     }
     foreach ($extraParams as $key => $value) {
       $this->set_var($key, $value);
     }
   }
 
-  /** Attribue $this->path au parametre fourni et vérifie qu'il existe bien 
-   
-  @param  $path string The directory to set as the path.
-  @return void
+  /** Attribue à $this->path la valeur du parametre fourni et vérification d'usage 
+    @param  $path string The directory to set as the path.
+    @return void
   */
   public function setScriptPath($path)
   {
-    $this->path = $path;
+    $this->path = $path; 
     
     //$this->path doit exister
     if (!is_readable($this->path)) {
@@ -50,30 +50,29 @@ class Template
   }
 
   /** Récupère le chemin du répertoire de template comme un array
-   
-  @return array  
+    @return array  
   */
   public function getScriptPaths()
   {
     return array($this->path);
   }
 
-
-  /** Attribue un FQName au fichier de template $filename et charge ce fichier dans son entite : (@ref loadfile($handle,$final))
-
-   @param $handle string ( ou array)  : est l'entite d'un fichier template représenté par $filename,
-   @param $filename string : nom de fichier du template
-   */
-  public function setFile($handle, $filename = "",$final=null) {
+  /** @brief Attribue un FQName au fichier de template $filename 
+             Classe le contenu du fichier dans l'entite $handle : (@ref loadfile($handle,$final))
+    @param $handle string ( ou array)  : est l'entite d'un fichier template représenté par $filename,
+    @param $filename string : nom de fichier du template
+    @return void
+  */
+  public function setFile($handle, $filename = "",$final=null) 
+  {
     if (!is_array($handle)) {
 
       // le fichier .tpl doit exister
       if ($filename == "") {
         throw new Exception ("set_file: For handle $handle filename is empty.");
-        return false;
       }
 
-      //stocker le FQName du template $filename dont $this->file['entite']
+      //stocker le FQName du template $filename dans $this->file['entite']
       $this->file[$handle] = $this->filename($filename);
 
       // Charge le fichier comme une entite  
@@ -88,101 +87,114 @@ class Template
     }
   }
 
-  /* public: set_block(string $parent, string $handle, string $name = "")
-   * extract the template $handle from $parent,
-   * place variable {$name} instead.
-   */
-  public function setBlock($parent, $handle, $name = "") {
+  /** Traitement et classement automatique (en boucle) d'un block html au sein de son entité parente dans une entité renouvellée et à chaque fois substituée
+    @param $parent string l'entité parente doit pre exister
+    @param $handle string l'entité de base à traiter 
+    @param $name string facultatif, dans ce cas on prend $handle comme entité  
+    @return void  
+  */
+  public function setBlock($parent, $handle, $name = "") 
+  {
+    //le chargement de $parent doir reussir    
     if (!$this->loadfile($parent)) {
       throw new Exception ("subst: unable to load $parent.");
       return false;
     }
-    if ($name == "")
-    { $name = $handle;}
-    else
-    { $this->setVar($name, "");} //cree un nouveau noeud vide
+    if (empty($name)) {
+       $name = $handle; 
+    }
+    else { //cree un nouvelle entité $name (si $name est vide, $name= $handle) 'à vide'
+      $this->setVar($name, "");
+    } 
 
-    $str = $this->getVar($parent); //retrouve la valeur du noeud parent
+    //retrouver la valeur du noeud (entité) $parent
+    $str = $this->getVar($parent); 
+
+    //traitement du block défini par <!--BEGIN $handle --> contenu du block \n <!-- END $handle -->
     $reg = "/<!--\s+BEGIN $handle\s+-->(.*)\n\s*<!--\s+END $handle\s+-->/sm";
-    preg_match_all($reg, $str, $m); //capture donc (.*) dans $m[1][0]
-    $str = preg_replace($reg, "{" . "$name}", $str);  //analyse $reg pour la remplacer par "{" . "$name}" dans $str
-    if(!isset($m[1][0]))
-    {
+    
+    // le contenu du block (.*) est capturé dans $m[1][0]
+    preg_match_all($reg, $str, $m); 
+
+    //Créer une nouvelle entité    
+    $newHandle = "{" . $name . "}";
+
+    //reassignation de $str : $reg y est remplacé par $newHandle dans $str  
+    $str = preg_replace($reg,$newHandle,$str); 
+    
+    if(!isset($m[1][0])) { 
       throw new Exception ("Block $handle does not exist");
     }
-    //cree un noeud avec comme cle:handle et comme valeur: la capture du bloc matché par $reg  
+    
+    //classement: cle<-$handle et valeur<-le bloc matché par $reg  
     $this->setVar($handle, $m[1][0]); 
-    $this->setVar($parent, $str); //cree un noeud avec cle:$parent et valeur $str
-  }// echo "Replace $parent with <pre>" . htmlentities($str) . "</pre>";
 
-  /**
-   * Overloading of the __set magic method: put $val in
-   * the array, indexed by $key
-   * Assign a variable to the template
-   * Surcharge de la méthode magique __set: met $val dans un tableau indexé par $key et assigne une variable à tout le contenu d'une entité
+    //classement: cle<-$parent et valeur<-$str 
+    // ici $str est classé à sa nouvelle valeur
+    $this->setVar($parent, $str); 
+  } 
 
-   *
-   * @param string $key The variable name.
-   * @param mixed $val The variable value.
-   * @return void
-   */
+  /** @ brief Surcharge de la méthode __set(): 
+    - met $val dans un tableau indexé par $key 
+    - place $key formatté en pattern regex dans un autre tableau, indexé par $key
+   @param $key string Nom de l'entité
+   @param $val mixed Valeur de l'entité
+   @return void
+  */
   public function __set($key, $val) 
   {
     $this->setVar($key, $val);
   }
 
-  /**
-   * Retrieve an assigned variable (overload the magic __get method)
-   *
-   * @param string $key The variable name.
-   * @return mixed The variable value.
-   */
+  /** Obtenir une entité assignée par surcharge de metthode __get()
+   @param $key string nom de l'entité
+   @return mixed la valeur de cette entité
+  */
   public function __get($key)
   {
     return $this->getVar($key);
   }
 
-  /**
-   * Allows testing with empty() and isset() to work
-   *
-   * @param string $key
-   * @return boolean
-   */
+  /** Tester l'existence d'une entité
+   @param $key string 
+   @return boolean
+  */
   public function __isset($key)
   {
-    return (null !== $this->varvals[$key]);
+    return (NULL !== $this->varvals[$key]);
   }
 
-  /**
-   * Allows unset() on object properties to work
-   *
-   * @param string $key
-   * @return void
+  /** Effacer une entité et sa valeur
+   @param $key string
+   @return void
    */
   public function __unset($key)
   {
-    $this->clearVars();
+    $this->clearVar($key); 
   }
 
-  /**
-    
-   * Attribue à $this->varkeys[$varname] l'entité $varname transformée en pattern de regex par (@ref varname($varname))
-   * attribue à $this->varvals[$varname] la valeur de cette entité : $value
-   * important : $value peut être vide
-   */
- 
-  public function setVar ($varname, $value = "")
+  /** 
+    @brief methode de classement centrale des entités et de leur valeurs 
+    - Attribue à $this->varkeys[$varname] l'entité $varname transformée en pattern de regex par (@ref varname($varname))
+    - Attribue à $this->varvals[$varname] la valeur de cette entité : $value
+    - Important : $value peut être vide
+    @param $varname string ou array : nom ou tableau de nom d'entité
+    @param $value string facultatif : valeur d'une entité
+    @return true
+  */
+  public function setVar ($varname,$value = "")
   {
     if (!is_array($varname)) {
       if (!empty($varname)){
-        //attribue l'entité $varname protégée par (@ref varname($varname))  à une clé  nommée $this->varkeys[$varname]
+        //l'entité $varname, protégée par (@ref varname($varname)), est assignée à une clé de $this->varkeys[$varname]
         $this->varkeys[$varname] = "/". $this->varname($varname) ."/"; // la valeur du masque 
         
-        //attribue $value (la valeur de l'entité $varname) à $this->varvals[$varname]
+        //la valeur de l'entité $varname (peut être nulle)  est attribuée à $this->varvals[$varname]
         $this->varvals[$varname] = $value;
       }
-     
-    } else {
+      return true;
+    } 
+    else {
       reset($varname);
       foreach ($varname as $k => $v) {
         if (!empty($k)){
@@ -190,75 +202,69 @@ class Template
           $this->varvals[$k] = $v;
         }
       }
+      return true;    
     }
+    
   }
 
-  /* public: getVar(string $varname, string $value)
-   * @varname: name of a variable that is to be retrieved
-   * @return:   value of that variable
-   */
+  /** Obtenir la valeur d'une entité
+   @param $varname: nom de l'entité à fournir
+   @return:   la valeur de l'entité
+  */
   public function getVar ($varname)
   {
     return $this->varvals[$varname];
   }
 
-  /* public: clearVar(string $varname, string $value)
-   * @varname: name of a variable that is to be undefined
-   * @return:   value of that variable
-   */
+  /** Effacer toute trace d'une seule entité dans  $this->varkeys et $this->varvals
+   @param $varname nom de l'entité à effacer
+   @return   void
+  */
   public function clearVar ($varname)
   {
     $this->varvals[$varname] = null;
     $this->varkeys[$varname] = null;
   }
    
-  /**
-   * Clear all assigned variables
-   *
-   * Clears all variables assigned to Zend_View either via {@link assign()} or
-   * property overloading ({@link __get()}/{@link __set()}).
-   *
-   * @return void
-   */
+  /** Supprime toutes les entités assignées à $this->varkeys et $this->varvals par reset array()
+   @return void
+  */
   public function clearVars()
   {
     $this->varvals = array();
     $this->varkeys = array();
   }
 
- 
-  /** Instantiate a template and put it in an entity
-   * whose content is replaced
-   *
-   */
-  public function assign ($target, $handle=null) {
-    if ($handle != null) {
-      $this->parse ($target, $handle);
+  /** Appel public de la methode privée (@ref parse($target,$handle,$append))   
+    @param $target string une entité 
+  */
+  public function assign ($target, $handle=null) 
+  {
+    if ($handle) { 
+      $this->parse ($target, $handle); 
+      return true;
     }
-    else
-    { $this->target = "";}
+    else { return false; }
   }
    
-  /** Instantiate a template and put it in an entity
-   * whose content is cumulated
-   *
-   */
-  public function append ($target, $handle) {
-    if (!isSet($this->varvals[$target])) { //si $target n'a pas de noeud on le crée
-      $this->setVar($target, "");
+  /**  Appel public de la methode privée (@ref parse($target,$handle,$append)) 
+   @param $target string ou array, une entité à créer si inexistante 
+   @param $handle string l'entité à traiter et à placer dans $target
+   @return void   
+  */
+  public function append ($target, $handle) 
+  {
+    //si $target n'a pas d'entité on crée l'entité $target à vide 
+    if (!isSet($this->varvals[$target])) { $this->setVar($target, "");  } 
 
-    }
-     
+    // (à mon avis) le true ici ne rajoute rien de précis  
     $this->parse ($target, $handle, true);
   }
-   
-   
-  /**
-   * Processes a template and returns the output.
-   *
-   * @param $name string l'entité de template à traiter
-   * @return string The output.
-   */
+  
+  /**méthode finale par traitement complet d'un template, de ses entités et retourne le processus achevé
+    @param $name string l'entité de template à traiter
+    @return string The output.
+  */
   public function render($name)
   {
     $this->parse("my_view", $name);
@@ -269,49 +275,51 @@ class Template
 
   /************** Private part of the class  *****************/
 
-   /* Instantiate a template, and put the result in an entity
-   *
-   * @target: handle of variable to generate
-   * @handle: handle of template to substitute
-   * @append: append to target handle
-   */
-
-  private function parse($target, $handle, $append = false) {
-    $str = $this->subst($handle); //lance les substitutions
-  // echo "parse: new str = <pre>" . htmlspecialchars($str) . "</pre>";
-    if ($append) {
-      // The new value is appended to the old one
-      $this->setVar($target, $this->getVar($target) . $str);
-    } else {
-      // The new value replaces the old one
+  /** @brief methode de traitement centrale : charge une entité, effectue la/les substitutions et reclasse le resultat dans une nouvelle entité 
+    appel des methodes (@ref subst($nandle)) et (@ref setVar($target,$handle)
+    @param $target string nouvelle entité à générer
+    @param $handle string entité à substituer
+    @param $append string facultatif à rajouter à $handle
+    @return void   
+  */
+  private function parse($target, $handle, $append = NULL ) 
+  {
+    //lance les substitutions
+    $str = $this->subst($handle); 
+  
+    if ($append) { //Rajouter le nouveau résultat à l'ancien
+      $newstr = $this->getVar($target) . $str;
+      $this->setVar($target, $newstr);
+    } 
+    else { // Reclassement de l'entité avec sa valeurs substituée
       $this->setVar($target, $str);
     }
-    //return $str;
   }
 
-
-  /** effectue la substitution par appel de preg_replace  
-   @param $handle  entite à substituer handle of template where variables are to be substituted.
-   */
-  private function subst($handle) {
-    // Load the file. If it is already done, the loadfile returns at once
+  /** effectue la substitution par appel de preg_replace   
+    @param $handle  entite à substituer handle of template where variables are to be substituted.
+    @return string avec la substitution des entités effectués
+  */
+  private function subst($handle) 
+  {    
+    // le fichier de template doit être chargé 'non substitué' dans son entité
     if (!$this->loadfile($handle)) {
       throw new Exception("subst: unable to load $handle.");
-    }
-  
-   	// Make the substitution
-     
+    }  
+   	// Récupérer le contenu de l'entité  classée  
     $str = $this->getVar($handle);
+    
+    // remplace $this->varkeys (recherchées dans $str) par $this->varvals,  et retourner le resultat
     $str = preg_replace($this->varkeys, $this->varvals, $str);
     return $str;
   }
 
   /** protection préalable d'entité avant substitution automatique de regex  
- 
     @param $varname string  nom d'une entité de remplacement à protéger
     @return string    
   */
-  private function varname($varname) {
+  private function varname($varname) 
+  {
     return preg_quote("{".$varname."}");
   }
 
@@ -320,45 +328,39 @@ class Template
    @param $filename string name to be completed.
    @return string FQName of the file
    */
-  private function filename($filename) {
+  private function filename($filename) 
+  {
     if (substr($filename, 0, 1) != "/") {
-      $filename = $this->path . DIRECTORY_SEPARATOR . $filename;
+       $filename = $this->path . DIRECTORY_SEPARATOR . $filename;
     }
-
     if (!file_exists($filename))
     { throw new Exception ("filename: file $filename does not exist.");}
-
     return $filename;
   }
 
-  /* private: loadfile(string $handle)
-   * @handle:  load file defined by handle, if it is not loaded yet.
-   */
-
- /**
-  * avant de lancer setVar ci-dessous, il faudrait vérifier que toutes les entités ont une valeur ($this->varkeys[$varname])
-  * sinon les entites non attribuées recoivent '' comme valeur
-  * un preg_match_all('#{testavant n'importe quoi testapres}#') devrait recuperer toutes les entites d'un template
-  * une boucle sur $this->varkeys testerait les entites non attribuees
-  * celles-là recoivent alors '' comme valeur
+  /** Classe le fichier .tpl de l'entité $handle par appel de (@ref setVar($handle,$value)) 
+    @param $handle:  load file defined by handle, if it is not loaded yet.
+    @return boolean
   */
-  private function loadfile($handle,$final=null) {
-    //Si l'entité handle existe, on renvoie true
+  private function loadfile($handle,$final=null) 
+  {    
+    //Si l'entité handle existe, finir ici
     if (isset($this->varkeys[$handle]) and !empty($this->varvals[$handle]))
     { return true;}
-
+    
+    //L'entité doit exister
     if (!isset($this->file[$handle])) {
       throw new Exception ("loadfile: $handle is not a valid handle.");
       return false;
     }
 
-    // retrouver le nom complet du chemin de l'entité assigné par (@ref setFile($handle,$filename,$final))
+    // retrouver le nom complet du chemin de l'entité déjà assigné par (@ref setFile($handle,$filename,$final))
     $filename = $this->file[$handle];
 
     //lit le contenu de l'entité  dans une chaine...
     $str = file_get_contents($filename);
 
-    //si le contenu est vide: exception
+    //$str doit exister
     if (empty($str)) {
       throw new Exception ("loadfile: While loading $handle, $filename does not exist or is empty.");
       return false;
@@ -371,20 +373,20 @@ class Template
       print_r($this->varvals);  
       echo '</pre>';  
     }
-
-    
-    $this->setVar($handle, $str);//$str est une chaine dont la valeur est le contenu du fichier.tpl
-                                 //crée un noeud avec cle $handle et valeur $str
+    //lance le classement de l'entité et de sa valeur
+    //$str est une chaine dont la valeur est le contenu du fichier.tpl
+    //crée un noeud avec cle $handle et valeur $str
+    $this->setVar($handle, $str);
+                                 
     return true;
   }
 
   /** Méthode statique pour créer un champ <select> à partir d'une liste PHP
-	@param $nom string nom du formulaire
-	@param $liste array($val=>$libelle)
-	@param $defaut string name d'un formulaire option "selected"
-	@param $required bool si la ligne est requise  
-   */
-
+	  @param $nom string nom du formulaire
+	  @param $liste array($val=>$libelle)
+	  @param $defaut string name d'un formulaire option "selected"
+	  @param $required bool si la ligne est requise  
+  */
   static function  champSelect ($nom, $liste, $defaut=NULL, $required=NULL)
   {
     $options = "";$id = $nom;
@@ -398,6 +400,5 @@ class Template
     }
     return "<select name=\"$nom\" id=\"$id\" class=\"form-control\" $required >\n" . $options . "</select>\n";
   }
-
 }
 

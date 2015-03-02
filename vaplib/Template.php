@@ -9,28 +9,19 @@
 class Template
 {
   private $classname = "Template";
-  private $debug     = false;   /**< if set, echo assignments */
-  private $root   = "";         /**< relative filenames are relative to this pathname */
-  private $path = "";           /**< Get the files from the following path */
-  private $target ='';
-  private $varkeys = array();   /**< $varkeys[key] = "key"; */
-  private $varvals = array();   /**<$varvals[key] = "value"; */
-  private $file = array();
-  private $unknowns = "remove"; /**< "remove"  => remove undefined variables; "comment" => replace undefined variables with comments; "keep"=> keep undefined variables */
-  private $halt_on_error  = "yes";/**< "yes" => halt, "report" => report error, continue, "no" => ignore error quietly */
-  private $last_error     = ""; /**< last error message is retained here */
-
+  private $path = "";           /**< le chemin général du dossier des template */
+  private $varkeys = array();   /**< le tableau des entités qui serviront de pattern regex à substituer */
+  private $varvals = array();   /**< le tableau des valeurs des entités  */
+  private $file = array();      /**< le tableau des chemins de fichiers */
+   
   /** Constructeur, charge un repertoire de fichiers template par (@ref setScriptPath($path))
     @param $tmplPath string, chemin d'u repertoire de templates
     @param $extraParams array 
   */
-  public function __construct($tmplPath = null, $extraParams = array())
+  public function __construct($tmplPath = NULL)
   {
-    if (null !== $tmplPath) { 
+    if ($tmplPath) { 
       $this->setScriptPath($tmplPath); 
-    }
-    foreach ($extraParams as $key => $value) {
-      $this->set_var($key, $value);
     }
   }
 

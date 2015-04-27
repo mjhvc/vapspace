@@ -35,9 +35,8 @@ class AuthCtrl extends Controleur
     $this->back =  '<span style="color:red">'.AUTH_BACK_ERROR.'</span>'; 
   }
 
-  /**
-  * Des entités de la vue du contexte à appeler à chaque fois
-  * L'entité index_contexte est dans pied.tpl
+  /** Les entités de la vue du contexte à appeler à chaque fois
+  L'entité index_contexte est dans pied.tpl
   */ 
   private function globalEntities()
   {
@@ -45,9 +44,8 @@ class AuthCtrl extends Controleur
     $this->vue->titre_page = AUTH_TITLE_PAGE;
     $this->vue->connecte = $this->statutConnect();
   }
-  /**
-  * constructEntity cote enfant: on appelle parent:: 
-  * on récupère les variables du contexte enfant pour la vue
+  /** constructEntity cote enfant: on appelle parent:: 
+  on récupère les variables du contexte enfant pour la vue
   */  
   protected function constructEntity($tableau=array(),$table=NULL,$flgStat=NULL)
   {  
@@ -64,10 +62,9 @@ class AuthCtrl extends Controleur
     }    
   }
 
-   /**
-  * controler() surcharge de parent::controler
-  * appel de parent::controler() puis fait des controles specifiques au contexte
-  * retourne $this->vue->retour
+   /** controler() surcharge de parent::controler
+  appel de parent::controler() puis fait des controles specifiques au contexte
+  retourne $this->vue->retour
   */ 
   protected function controler($tableau)
   {  
@@ -114,12 +111,10 @@ class AuthCtrl extends Controleur
     $out = $this->vue->render("page");
     return $out;
   }     
-  /*
-  * methode login: 
-  *  lancer controler()
-  *  si controles ok, et si session créée:
-  *  on recalcule les droits, on redirige en conséquence :  
-  *  un membre va dans son vapspace, un admin dans le coin des admin 
+  /** lancer controler()
+     - si controles ok, et si session créée:
+     - on recalcule les droits, on redirige en conséquence :  
+     - un membre va dans son vapspace, un admin dans le coin des admin 
   */
   public function login()
   {
@@ -152,8 +147,7 @@ class AuthCtrl extends Controleur
       $e->alerte($msg);  
     } 
   }
-  /**
-  * methode logout: on detruit la session et le cookie, on redirige sur site public
+  /** methode logout: on detruit la session et le cookie, on redirige sur site public
   */
   public function logout()
   {
@@ -163,6 +157,9 @@ class AuthCtrl extends Controleur
     header($loc);
   }
   
+  /** methode index appellés si aucunes autres, traitement des réponses à 3 variables GET : retour,sess et del
+  
+  */  
   public function index()
   {
     try {  

@@ -5,7 +5,6 @@
   @copyright [GNU Public License](@ref licence.dox) 
   @brief Une classe implantant un moteur de templates semblable à celui de la PHPLIB.
 */
-
 class Template
 {
   private $classname = "Template";

@@ -1,7 +1,7 @@
 <?php
 /**
   @class  Template
-  @autor  Philippe Rigaux
+  @author  Philippe Rigaux
   @copyright [GNU Public License](@ref licence.dox) 
   @brief Une classe implantant un moteur de templates semblable à celui de la PHPLIB.
 */
@@ -14,8 +14,7 @@ class Template
   private $file = array();      /**< le tableau des chemins de fichiers */
    
   /** Constructeur, charge un repertoire de fichiers template par (@ref setScriptPath($path))
-    @param $tmplPath string, chemin d'u repertoire de templates
-    @param $extraParams array 
+    @param $tmplPath string, chemin d'u repertoire de templates 
   */
   public function __construct($tmplPath = NULL)
   {
@@ -51,6 +50,7 @@ class Template
              Classe le contenu du fichier dans l'entite $handle : (@ref loadfile($handle,$final))
     @param $handle string ( ou array)  : est l'entite d'un fichier template représenté par $filename,
     @param $filename string : nom de fichier du template
+    @param $final bool flag pour debug pas utilisé 
     @return void
   */
   public function setFile($handle, $filename = "",$final=null) 
@@ -226,7 +226,9 @@ class Template
   }
 
   /** Appel public de la methode privée (@ref parse($target,$handle,$append))   
-    @param $target string une entité 
+    @param $target string une entité
+    @param $handle string entité à assigner
+    @return bool 
   */
   public function assign ($target, $handle=null) 
   {
@@ -329,7 +331,8 @@ class Template
   }
 
   /** Classe le fichier .tpl de l'entité $handle par appel de (@ref setVar($handle,$value)) 
-    @param $handle:  load file defined by handle, if it is not loaded yet.
+    @param $handle  load file defined by handle, if it is not loaded yet.
+    @param $final bool flag pour debug (non utilisé)
     @return boolean
   */
   private function loadfile($handle,$final=null) 
@@ -371,7 +374,7 @@ class Template
     return true;
   }
 
-  /** Méthode statique pour créer un champ <select> à partir d'une liste PHP
+  /** Méthode statique pour créer un champ select à partir d'une liste PHP
 	  @param $nom string nom du formulaire
 	  @param $liste array($val=>$libelle)
 	  @param $defaut string name d'un formulaire option "selected"
